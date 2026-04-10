@@ -1,0 +1,2 @@
+# NexsAI
+WhatsApp automation platform
