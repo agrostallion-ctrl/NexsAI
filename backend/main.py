@@ -33,3 +33,9 @@ def home():
     return {"message": "NexusAI running 🚀"}
 
 models.Base.metadata.create_all(bind=engine)
+
+@app.on_event("startup")
+def startup():
+    models.Base.metadata.create_all(bind=engine)
+    import seed
+    seed  # seed chalega
