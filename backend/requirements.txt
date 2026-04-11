@@ -9,3 +9,4 @@ bcrypt
 passlib
 requests
 email-validator
+psycopg2-binary
