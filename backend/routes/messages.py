@@ -39,6 +39,35 @@ def get_messages(
         for m in messages
     ]
 
+@router.post("/contacts")
+def create_contact(
+    phone: str,
+    name: str = None,
+    db: Session = Depends(get_db),
+    current_agent: dict = Depends(get_current_agent)
+):
+    # Check existing
+    existing = db.query(models.Contact).filter_by(phone=phone).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Contact already exists")
+
+    # Contact banao
+    contact = models.Contact(phone=phone, name=name)
+    db.add(contact)
+    db.commit()
+    db.refresh(contact)
+
+    # Conversation banao with agent
+    convo = models.Conversation(contact_id=contact.id, agent_id=current_agent["id"])
+    db.add(convo)
+    db.commit()
+
+    return {
+        "id": contact.id,
+        "phone": contact.phone,
+        "name": contact.name,
+        "message": "Contact created successfully"
+    }
 
 # 🔥 2. GET CONTACTS
 @router.get("/contacts")
