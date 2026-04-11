@@ -11,6 +11,7 @@ origins = [
     "http://localhost:3001",
     "http://127.0.0.1:3001",
     "https://nexs-ai.vercel.app",  # 👈 important
+    "https://nexs-ai.vercel.app"
 ]
 
 app.add_middleware(
