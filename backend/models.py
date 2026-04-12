@@ -91,7 +91,7 @@ async def whatsapp_webhook(request: Request):
                 "id": new_msg.id,
                 "content": new_msg.content,
                 "sender": "customer",
-                "timestamp": new_msg.timestamp.strftime("%I:%M %p") if new_msg.timestamp else None,
+                "timestamp": new_msg.created_at.strftime("%I:%M %p") if new_msg.created_at else None,  # ← comma
                 "is_read": False,
                 "phone": phone
             })

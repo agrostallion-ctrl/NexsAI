@@ -34,7 +34,7 @@ def get_messages(
             "id": m.id,
             "content": m.content,
             "sender": m.sender,
-            "timestamp": m.timestamp.strftime("%I:%M %p") if m.timestamp else None  # ✅ fix
+            "timestamp": m.created_at.strftime("%I:%M %p") if m.created_at else None  # ✅ fix
         }
         for m in messages
     ]
