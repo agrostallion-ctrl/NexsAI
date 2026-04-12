@@ -84,7 +84,8 @@ export default function ChatPage() {
     if (!selected) return;
     fetchMessages(selected.phone);
 
-    const socket = new WebSocket(`ws://localhost:8001/ws/${selected.phone}`);
+    const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001"
+    const socket = new WebSocket(`${WS_URL}/ws/${selected.phone}`);
     socketRef.current = socket;
 
     socket.onmessage = (event) => {
