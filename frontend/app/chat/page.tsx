@@ -99,6 +99,14 @@ export default function ChatPage() {
       });
     };
 
+// Auto reconnect
+socket.onclose = () => {
+  setTimeout(() => {
+    // reconnect karo
+    fetchMessages(selected.phone)
+  }, 3000)
+}
+
     return () => { socket.close(); socketRef.current = null; };
   }, [selected, fetchMessages]);
 
@@ -117,6 +125,8 @@ export default function ChatPage() {
       timestamp: formatTime()
     }
 
+
+
     setMessages(prev => [...prev, tempMsg])
     setInput("")
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
@@ -133,6 +143,7 @@ export default function ChatPage() {
       setMessages(prev => prev.filter(m => m.id !== tempId))
     }
   }
+
 
   if (!isAuthed) return null
 
