@@ -14,10 +14,11 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True, # Agar aap cookies ya auth headers use kar rahe hain toh True rakhein
     allow_methods=["*"],
     allow_headers=["*"],
+    
 )
 
 app.include_router(webhook.router)
