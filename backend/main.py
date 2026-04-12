@@ -15,9 +15,11 @@ app.add_middleware(
         "https://nexs-ai.vercel.app",
         "https://nexs-ai-git-main-agrostallion-ctrls-projects.vercel.app",
     ],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_origins=["*"],  # ← yeh karo
+   
 )
 
 app.include_router(webhook.router)
