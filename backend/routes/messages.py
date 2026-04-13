@@ -96,7 +96,7 @@ def get_contacts(
         models.Contact.name,
         models.Conversation.agent_id,
         MessageAlias.content,
-        MessageAlias.timestamp,  # ✅ fix
+        MessageAlias.created_at,  # ✅ fix
         func.coalesce(unread_subq.c.unread_count, 0).label("unread_count")
     )\
     .join(models.Conversation, models.Conversation.contact_id == models.Contact.id)\
@@ -104,21 +104,21 @@ def get_contacts(
     .outerjoin(MessageAlias, MessageAlias.id == last_msg_subq.c.last_msg_id)\
     .outerjoin(unread_subq, unread_subq.c.conversation_id == models.Conversation.id)\
     .filter(models.Conversation.agent_id == current_agent["id"])\
-    .order_by(MessageAlias.timestamp.desc())\
+    .order_by(MessageAlias.created_at.desc())\
     .all()
 
     return [
-        {
-            "id": r.id,
-            "phone": r.phone,
-            "name": r.name or r.phone,
-            "agent_id": r.agent_id,
-            "last_message": r.content or "Start chatting...",
-            "timestamp": r.timestamp.strftime("%I:%M %p") if r.timestamp else None,  # ✅ fix
-            "unread_count": r.unread_count
-        }
-        for r in results
-    ]
+    {
+        "id": r.id,
+        "phone": r.phone,
+        "name": r.name or r.phone,
+        "agent_id": r.agent_id,
+        "last_message": r.content or "Start chatting...",
+        "timestamp": r.created_at.strftime("%I:%M %p") if r.created_at else None,  # ✅ FIXED
+        "unread_count": r.unread_count
+    }
+    for r in results
+]
 
 
 # 🔥 3. ASSIGN AGENT

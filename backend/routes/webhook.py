@@ -67,7 +67,7 @@ async def whatsapp_webhook(request: Request):
             "id": new_msg.id,
             "content": message_text,
             "sender": "customer",
-            "timestamp": getattr(new_msg, "created_at", None)
+            "timestamp": new_msg.created_at
         })
 
         return {"status": "success"}
