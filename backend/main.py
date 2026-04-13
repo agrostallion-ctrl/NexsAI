@@ -6,19 +6,12 @@ from routes import webhook, messages, send, socket, auth
 
 app = FastAPI()
 
-# Sirf ek baar allow_origins define karein
-origins = [
-    "https://nexs-ai.vercel.app",  # Aapka production URL
-    "http://localhost:3001",       # Local development ke liye (optional)
-]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True, # Agar aap cookies ya auth headers use kar rahe hain toh True rakhein
+    allow_credentials=False,  # ← * ke saath False hona chahiye
     allow_methods=["*"],
     allow_headers=["*"],
-    
 )
 
 app.include_router(webhook.router)
