@@ -6,15 +6,10 @@ from routes import webhook, messages, send, socket, auth
 
 app = FastAPI()
 
-origins = [
-    "https://nexs-ai.vercel.app",
-    "http://localhost:3000",  # dev ke liye
-]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,  # ← True se False karo
     allow_methods=["*"],
     allow_headers=["*"],
 )
