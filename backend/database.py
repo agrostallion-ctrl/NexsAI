@@ -5,16 +5,19 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    raise ValueError("❌ DATABASE_URL not set")
+    raise ValueError("DATABASE_URL not set")
 
-# Fix for Railway / old postgres URL
+# Fix postgres URL
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Engine
+# 🔥 ADD THIS (MOST IMPORTANT)
+if "sslmode" not in DATABASE_URL:
+    DATABASE_URL += "?sslmode=require"
+
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,   # 🔥 connection auto-fix
+    pool_pre_ping=True,
 )
 
 SessionLocal = sessionmaker(bind=engine)
