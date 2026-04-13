@@ -3,7 +3,6 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
 
-
 class Contact(Base):
     __tablename__ = "contacts"
 
@@ -32,9 +31,8 @@ class Message(Base):
 
     id = Column(Integer, primary_key=True)
     conversation_id = Column(Integer, ForeignKey("conversations.id"), index=True)
-    sender = Column(String)  # "customer" / "agent"
+    sender = Column(String)
     content = Column(Text)
-
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     is_read = Column(Boolean, default=False)
 
