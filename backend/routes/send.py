@@ -55,7 +55,7 @@ async def send_message(
             conversation_id=convo.id,
             sender="agent",
             content=message,
-            is_read=True
+            is_read=False
         )
         db.add(new_msg)
         db.commit()
