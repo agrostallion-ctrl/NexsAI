@@ -14,27 +14,33 @@ def get_messages(
     db: Session = Depends(get_db),
     current_agent: dict = Depends(get_current_agent)
 ):
-    convo = db.query(models.Conversation)\
-        .join(models.Contact)\
-        .filter(models.Contact.phone == phone)\
-        .first()
+    # 1️⃣ Contact find
+    contact = db.query(models.Contact).filter_by(phone=phone).first()
+    if not contact:
+        return []
 
-    if convo and convo.agent_id != current_agent["id"]:
+    # 2️⃣ Conversation find
+    convo = db.query(models.Conversation).filter_by(contact_id=contact.id).first()
+    if not convo:
+        return []
+
+    # 🔐 Authorization check
+    if convo.agent_id != current_agent["id"]:
         raise HTTPException(status_code=403, detail="Not authorized")
 
+    # 3️⃣ Messages fetch
     messages = db.query(models.Message)\
-        .join(models.Conversation)\
-        .join(models.Contact)\
-        .filter(models.Contact.phone == phone)\
+        .filter_by(conversation_id=convo.id)\
         .order_by(models.Message.id.asc())\
         .all()
 
+    # 4️⃣ Return
     return [
         {
             "id": m.id,
             "content": m.content,
             "sender": m.sender,
-            "timestamp": m.created_at.strftime("%I:%M %p") if m.created_at else None  # ✅ fix
+            "timestamp": m.created_at.strftime("%I:%M %p") if m.created_at else None
         }
         for m in messages
     ]

@@ -23,48 +23,86 @@ async def send_message(
 ):
     db = SessionLocal()
     try:
-        # ✅ WhatsApp API call (async)
-        url = f"https://graph.facebook.com/v20.0/{PHONE_NUMBER_ID}/messages"
-        headers = {
-            "Authorization": f"Bearer {WHATSAPP_TOKEN}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "messaging_product": "whatsapp",
-            "recipient_type": "individual",
-            "to": phone,
-            "type": "text",
-            "text": {"body": message}
-        }
-
-        async with httpx.AsyncClient() as client:
-            res = await client.post(url, headers=headers, json=data)
-
-        # ✅ DB save
+        # =========================
+        # 1️⃣ CONTACT ENSURE
+        # =========================
         contact = db.query(models.Contact).filter_by(phone=phone).first()
-        if contact:
-            convo = db.query(models.Conversation).filter_by(contact_id=contact.id).first()
-            if convo:
-                new_msg = models.Message(
-                    conversation_id=convo.id,
-                    sender="agent",
-                    content=message,
-                    is_read=True
-                )
-                db.add(new_msg)
-                db.commit()
-                db.refresh(new_msg)
+        if not contact:
+            contact = models.Contact(phone=phone)
+            db.add(contact)
+            db.commit()
+            db.refresh(contact)
+            print("🆕 Contact created:", contact.id)
 
-                # 🔥 REAL-TIME PUSH
-                await manager.send_to_user(phone, {
-                    "id": new_msg.id,
-                    "content": message,
-                    "sender": "agent",
-                    "timestamp": new_msg.created_at.strftime("%I:%M %p") if new_msg.created_at else None,
-                    "is_read": True
-                })
+        # =========================
+        # 2️⃣ CONVERSATION ENSURE
+        # =========================
+        convo = db.query(models.Conversation).filter_by(contact_id=contact.id).first()
+        if not convo:
+            convo = models.Conversation(
+                contact_id=contact.id,
+                agent_id=current_agent["id"]
+            )
+            db.add(convo)
+            db.commit()
+            db.refresh(convo)
+            print("🆕 Conversation created:", convo.id)
 
-        return res.json()
+        # =========================
+        # 3️⃣ SAVE MESSAGE (FIRST)
+        # =========================
+        new_msg = models.Message(
+            conversation_id=convo.id,
+            sender="agent",
+            content=message,
+            is_read=True
+        )
+        db.add(new_msg)
+        db.commit()
+        db.refresh(new_msg)
+
+        print("✅ Saved in DB:", new_msg.id)
+
+        # =========================
+        # 4️⃣ REAL-TIME WEBSOCKET
+        # =========================
+        await manager.send_to_user(phone, {
+            "id": new_msg.id,
+            "content": message,
+            "sender": "agent",
+            "timestamp": new_msg.created_at.strftime("%I:%M %p") if new_msg.created_at else None,
+            "is_read": True
+        })
+
+        # =========================
+        # 5️⃣ WHATSAPP API (NON-BLOCKING)
+        # =========================
+        try:
+            url = f"https://graph.facebook.com/v20.0/{PHONE_NUMBER_ID}/messages"
+            headers = {
+                "Authorization": f"Bearer {WHATSAPP_TOKEN}",
+                "Content-Type": "application/json"
+            }
+            data = {
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": phone,
+                "type": "text",
+                "text": {"body": message}
+            }
+
+            async with httpx.AsyncClient() as client:
+                res = await client.post(url, headers=headers, json=data)
+
+            print("📤 WhatsApp:", res.status_code, res.text)
+
+        except Exception as e:
+            print("❌ WhatsApp error:", e)
+
+        return {
+            "status": "success",
+            "message_id": new_msg.id
+        }
 
     finally:
         db.close()
