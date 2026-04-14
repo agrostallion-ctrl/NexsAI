@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import api from "../../lib/api"
 
 interface Contact { id: number; phone: string; name?: string; last_message?: string; unread?: number }
-interface Message { id: number | string; content: string; sender: 'customer' | 'agent'; timestamp?: string }
+interface Message { id: number | string; content: string; sender: 'customer' | 'agent'; timestamp?: string ,is_read?: boolean}
 
 const AVATAR_COLORS = ['#d32f2f', '#6a1b9a', '#283593', '#1565c0', '#00695c', '#2e7d32', '#e65100', '#37474f']
 const getAvatarColor = (str: string) => {
@@ -25,19 +25,38 @@ Avatar.displayName = 'Avatar'
 
 const MessageBubble = memo(({ msg }: { msg: Message }) => {
   const isOut = msg.sender !== 'customer'
+
   return (
     <div className={`flex ${isOut ? 'justify-end' : 'justify-start'} mb-1`}>
-      <div className={`max-w-[65%] min-w-[85px] px-3 pt-1.5 pb-6 relative rounded-lg shadow text-[14.5px] text-[#e9edef]
-        ${isOut ? 'bg-[#005c4b] rounded-tr-none' : 'bg-[#202c33] rounded-tl-none'}`}>
+      <div
+        className={`max-w-[65%] min-w-[85px] px-3 pt-1.5 pb-6 relative rounded-lg shadow text-[14.5px] text-[#e9edef]
+        ${isOut ? 'bg-[#005c4b] rounded-tr-none' : 'bg-[#202c33] rounded-tl-none'}`}
+      >
+        {/* Message Text */}
         {msg.content}
+
+        {/* Time + Tick */}
         <span className="absolute bottom-1.5 right-2 text-[10.5px] text-white/40 flex items-center gap-1 select-none">
           {msg.timestamp || formatTime()}
-          {isOut && <svg width="16" height="11" viewBox="0 0 16 11" fill="#53bdeb"><path d="M11.071.653a.45.45 0 01.749 0l.424.604a.45.45 0 01-.074.602l-5.47 4.7a.45.45 0 01-.613-.02L3.22 3.684a.45.45 0 01.012-.637l.437-.42a.45.45 0 01.628.013l1.923 1.96L11.071.652zm-1.43 5.15l.438-.42a.45.45 0 01.628.013l1.923 1.96 4.051-4.703a.45.45 0 01.749 0l.424.604a.45.45 0 01-.074.602l-5.47 4.7a.45.45 0 01-.613-.02L9.629 6.182a.45.45 0 01.012-.38z"/></svg>}
+
+          {/* ✅ Tick Logic */}
+          {isOut && (
+            msg.is_read ? (
+              // 🔵 READ → Double blue tick
+              <svg width="16" height="11" viewBox="0 0 16 11" fill="#53bdeb">
+                <path d="M11.071.653a.45.45 0 01.749 0l.424.604a.45.45 0 01-.074.602l-5.47 4.7a.45.45 0 01-.613-.02L3.22 3.684a.45.45 0 01.012-.637l.437-.42a.45.45 0 01.628.013l1.923 1.96L11.071.652zm-1.43 5.15l.438-.42a.45.45 0 01.628.013l1.923 1.96 4.051-4.703a.45.45 0 01.749 0l.424.604a.45.45 0 01-.074.602l-5.47 4.7a.45.45 0 01-.613-.02L9.629 6.182a.45.45 0 01.012-.38z"/>
+              </svg>
+            ) : (
+              // ⚪ SENT → Single tick
+              <span className="text-white/50 text-xs">✔</span>
+            )
+          )}
         </span>
       </div>
     </div>
   )
 })
+
 MessageBubble.displayName = 'MessageBubble'
 
 export default function ChatPage() {
