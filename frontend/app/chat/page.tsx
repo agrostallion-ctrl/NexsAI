@@ -84,28 +84,38 @@ export default function ChatPage() {
     if (!selected) return;
     fetchMessages(selected.phone);
 
-    const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001"
+    const WS_URL = "wss://nexsai-production.up.railway.app"
     const socket = new WebSocket(`${WS_URL}/ws/${selected.phone}`);
-    socketRef.current = socket;
 
-    socket.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      setMessages(prev => {
-        const exists = prev.some(m =>
-          m.id === msg.id || (m.content === msg.content && m.sender === msg.sender && m.id.toString().startsWith('temp-'))
-        );
-        if (exists) return prev;
-        return [...prev, msg];
-      });
-    };
+socketRef.current = socket;
 
-// Auto reconnect
+socket.onopen = () => {
+  console.log("✅ WS CONNECTED:", selected.phone);
+};
+
+socket.onmessage = (event) => {
+  const msg = JSON.parse(event.data);
+  console.log("🔥 NEW MSG:", msg);
+
+  setMessages(prev => {
+    const exists = prev.some(m =>
+      m.id === msg.id ||
+      (m.content === msg.content &&
+       m.sender === msg.sender &&
+       m.id.toString().startsWith('temp-'))
+    );
+    if (exists) return prev;
+    return [...prev, msg];
+  });
+};
+
+socket.onerror = (err) => {
+  console.log("❌ WS ERROR:", err);
+};
+
 socket.onclose = () => {
-  setTimeout(() => {
-    // reconnect karo
-    fetchMessages(selected.phone)
-  }, 3000)
-}
+  console.log("⚠️ WS CLOSED");
+};
 
     return () => { socket.close(); socketRef.current = null; };
   }, [selected, fetchMessages]);
@@ -136,7 +146,7 @@ socket.onclose = () => {
         params: { phone: selected.phone, message: tempMsg.content }
       })
       if (socketRef.current?.readyState === WebSocket.OPEN) {
-        socketRef.current.send(JSON.stringify(tempMsg))
+        
       }
     } catch (err) {
       console.error("Send failed")
