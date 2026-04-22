@@ -10,6 +10,7 @@ router = APIRouter()
 VERIFY_TOKEN = "nexusai123"
 ist = ZoneInfo("Asia/Kolkata")
 
+
 # ✅ VERIFY
 @router.get("/webhook")
 async def verify_webhook(request: Request):
@@ -23,7 +24,7 @@ async def verify_webhook(request: Request):
     return PlainTextResponse("error", status_code=403)
 
 
-# ✅ RECEIVE MESSAGE
+# ✅ RECEIVE MESSAGE + STATUS
 @router.post("/webhook")
 async def whatsapp_webhook(request: Request):
     payload = await request.json()
@@ -36,14 +37,43 @@ async def whatsapp_webhook(request: Request):
             for change in entry.get("changes", []):
                 value = change.get("value", {})
 
+                # =========================
+                # ✅ HANDLE DELIVERY STATUS
+                # =========================
+                statuses = value.get("statuses")
+                if statuses:
+                    for status in statuses:
+                        msg_id = status.get("id")
+                        status_type = status.get("status")  # sent / delivered / read
+
+                        print("📊 STATUS:", msg_id, status_type)
+
+                        db_msg = db.query(models.Message).filter_by(whatsapp_id=msg_id).first()
+                        if db_msg:
+                            db_msg.status = status_type
+                            db.commit()
+
+                            phone = db_msg.conversation.contact.phone
+
+                            # realtime push
+                            await manager.send_to_user(phone, {
+                                "id": db_msg.id,
+                                "status": status_type
+                            })
+
+                # =========================
+                # ✅ HANDLE INCOMING MESSAGE
+                # =========================
                 messages = value.get("messages")
                 if not messages:
                     continue
 
                 for msg in messages:
-                    phone = msg["from"]
-                    if phone.startswith("91"):
-                       phone = phone[-10:]
+                    phone = msg.get("from")
+
+                    # ✅ normalize phone
+                    phone = phone[-10:]
+
                     text = msg.get("text", {}).get("body", "")
 
                     print("📩 MSG:", phone, text)
@@ -64,7 +94,7 @@ async def whatsapp_webhook(request: Request):
                         db.commit()
                         db.refresh(convo)
 
-                    # message save
+                    # save message
                     new_msg = models.Message(
                         conversation_id=convo.id,
                         sender="customer",
@@ -75,7 +105,7 @@ async def whatsapp_webhook(request: Request):
                     db.commit()
                     db.refresh(new_msg)
 
-                    # ✅ FIXED TIMESTAMP
+                    # timestamp IST
                     timestamp = new_msg.created_at.astimezone(ist).strftime("%I:%M %p")
 
                     # realtime push
