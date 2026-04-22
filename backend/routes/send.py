@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import models
 from routes.socket import manager
 from dependencies import get_current_agent, get_db
-from schemas import SendMessageRequest  # 👈 import schema
+from schemas import SendMessageRequest
 
 load_dotenv()
 
@@ -53,17 +53,15 @@ async def send_message(
         raise HTTPException(401, "Invalid agent")
 
     try:
-        # 🔥 TRANSACTION START
+        # 🔥 TRANSACTION (DB SAVE FIRST)
         with db.begin():
 
-            # CONTACT
             contact = db.query(models.Contact).filter_by(phone=phone).first()
             if not contact:
                 contact = models.Contact(phone=phone)
                 db.add(contact)
                 db.flush()
 
-            # CONVERSATION
             convo = db.query(models.Conversation).filter_by(contact_id=contact.id).first()
             if not convo:
                 convo = models.Conversation(
@@ -73,7 +71,6 @@ async def send_message(
                 db.add(convo)
                 db.flush()
 
-            # MESSAGE SAVE
             new_msg = models.Message(
                 conversation_id=convo.id,
                 sender="agent",
@@ -86,7 +83,7 @@ async def send_message(
 
         print("✅ DB saved:", new_msg.id)
 
-        # 🔥 WEBSOCKET
+        # 🔥 WEBSOCKET (instant UI update)
         await manager.send_to_user(phone, {
             "id": new_msg.id,
             "content": message,
@@ -96,7 +93,7 @@ async def send_message(
             "phone": phone
         })
 
-        # 🔥 WHATSAPP API
+        # 🔥 WHATSAPP API CALL
         wa_phone = normalize_phone(phone)
 
         url = f"https://graph.facebook.com/v20.0/{PHONE_NUMBER_ID}/messages"
@@ -115,21 +112,34 @@ async def send_message(
         async with httpx.AsyncClient(timeout=30) as client:
             res = await client.post(url, headers=headers, json=payload)
 
-        if res.status_code != 200:
-            print("❌ WhatsApp error:", res.text)
-            raise HTTPException(500, "WhatsApp send failed")
-
         data = res.json()
-        print("📤 WA:", data)
+        print("📦 WA RESPONSE:", data)
 
-        # ✅ SAVE WHATSAPP ID
-        if "messages" in data:
-            wa_id = data["messages"][0]["id"]
+        # ❌ ERROR HANDLE (IMPORTANT)
+        if res.status_code != 200 or "messages" not in data:
+            print("❌ WhatsApp Error:", data)
 
-            new_msg.whatsapp_id = wa_id
+            # update DB status = failed
+            db.query(models.Message).filter_by(id=new_msg.id).update({
+                "status": "failed"
+            })
             db.commit()
 
-            print("✅ WA ID saved:", wa_id)
+            return {
+                "status": "failed",
+                "error": data
+            }
+
+        # ✅ SUCCESS CASE
+        wa_id = data["messages"][0]["id"]
+
+        db.query(models.Message).filter_by(id=new_msg.id).update({
+            "whatsapp_id": wa_id,
+            "status": "sent"
+        })
+        db.commit()
+
+        print("✅ WA ID saved:", wa_id)
 
         return {
             "status": "success",
