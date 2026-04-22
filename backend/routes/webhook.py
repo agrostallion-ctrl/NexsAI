@@ -3,21 +3,26 @@ from database import SessionLocal
 import models
 from routes.socket import manager
 import json
+from fastapi.responses import PlainTextResponse
+
 
 router = APIRouter()
 
-VERIFY_TOKEN = "myverifytoken"  # same jo meta me dala hai
+VERIFY_TOKEN = "nexusai123"  # same jo meta me dala hai
 
 
-# ✅ VERIFY (GET)
 @router.get("/webhook")
-async def verify(request: Request):
-    params = request.query_params
+async def verify_webhook(request: Request):
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
 
-    if params.get("hub.mode") == "subscribe" and params.get("hub.verify_token") == VERIFY_TOKEN:
-        return int(params.get("hub.challenge"))
+    print("VERIFY HIT:", mode, token, challenge)
 
-    return {"status": "error"}
+    if mode == "subscribe" and token == VERIFY_TOKEN:
+        return PlainTextResponse(content=challenge)
+
+    return PlainTextResponse(content="error", status_code=403)
 
 
 # ✅ RECEIVE (POST)
