@@ -1,87 +1,90 @@
 from fastapi import APIRouter, Request
+from fastapi.responses import PlainTextResponse
 from database import SessionLocal
 import models
 from routes.socket import manager
-import json
-from fastapi.responses import PlainTextResponse
-
 
 router = APIRouter()
 
-VERIFY_TOKEN = "nexusai123"  # same jo meta me dala hai
+VERIFY_TOKEN = "nexusai123"
 
 
+# ✅ VERIFY (GET)
 @router.get("/webhook")
 async def verify_webhook(request: Request):
     mode = request.query_params.get("hub.mode")
     token = request.query_params.get("hub.verify_token")
     challenge = request.query_params.get("hub.challenge")
 
-    print("VERIFY HIT:", mode, token, challenge)
-
     if mode == "subscribe" and token == VERIFY_TOKEN:
         return PlainTextResponse(content=challenge)
 
-    return PlainTextResponse(content="error", status_code=403)
+    return PlainTextResponse("error", status_code=403)
 
 
-# ✅ RECEIVE (POST)
+# ✅ RECEIVE MESSAGE (POST)
 @router.post("/webhook")
 async def whatsapp_webhook(request: Request):
+    payload = await request.json()
+    print("🔥 WEBHOOK:", payload)
+
     db = SessionLocal()
+
     try:
-        body = await request.body()
-
-        if not body:
-            return {"status": "empty"}  # 💥 crash fix
-
-        payload = json.loads(body)
-
         entry = payload.get("entry", [])
-        if not entry:
-            return {"status": "no entry"}
+        for e in entry:
+            changes = e.get("changes", [])
+            for change in changes:
+                value = change.get("value", {})
 
-        changes = entry[0].get("changes", [])
-        if not changes:
-            return {"status": "no changes"}
+                messages = value.get("messages")
+                if messages:
+                    for msg in messages:
+                        phone = msg["from"]
+                        text = msg.get("text", {}).get("body", "")
 
-        value = changes[0].get("value", {})
-        messages = value.get("messages")
+                        print("📩 MSG:", phone, text)
 
-        if messages:
-            msg = messages[0]
-            phone = msg.get("from")
-            text = msg.get("text", {}).get("body")
+                        # ✅ find contact
+                        contact = db.query(models.Contact).filter_by(phone=phone).first()
+                        if not contact:
+                            contact = models.Contact(phone=phone)
+                            db.add(contact)
+                            db.commit()
+                            db.refresh(contact)
 
-            # save DB
-            contact = db.query(models.Contact).filter_by(phone=phone).first()
-            if contact:
-                convo = db.query(models.Conversation).filter_by(contact_id=contact.id).first()
-                if convo:
-                    new_msg = models.Message(
-                        conversation_id=convo.id,
-                        sender="customer",
-                        content=text,
-                        is_read=False
-                    )
-                    db.add(new_msg)
-                    db.commit()
-                    db.refresh(new_msg)
+                        # ✅ find/create conversation
+                        convo = db.query(models.Conversation).filter_by(contact_id=contact.id).first()
+                        if not convo:
+                            convo = models.Conversation(contact_id=contact.id)
+                            db.add(convo)
+                            db.commit()
+                            db.refresh(convo)
 
-                    # 🔥 realtime push
-                    await manager.send_to_user(phone, {
-                        "id": new_msg.id,
-                        "content": text,
-                        "sender": "customer",
-                        "timestamp": new_msg.created_at.strftime("%I:%M %p"),
-                        "is_read": False
-                    })
+                        # ✅ save message
+                        new_msg = models.Message(
+                            conversation_id=convo.id,
+                            sender="customer",
+                            content=text,
+                            is_read=False
+                        )
+                        db.add(new_msg)
+                        db.commit()
+                        db.refresh(new_msg)
 
-        return {"status": "ok"}
+                        # 🔥 REALTIME PUSH
+                        await manager.send_to_user(phone, {
+                            "id": new_msg.id,
+                            "content": text,
+                            "sender": "customer",
+                            "timestamp": new_msg.created_at.strftime("%I:%M %p") if new_msg.created_at else None,
+                            "is_read": False
+                        })
 
     except Exception as e:
-        print("❌ WEBHOOK ERROR:", e)
-        return {"status": "error"}
+        print("❌ ERROR:", str(e))
 
     finally:
         db.close()
+
+    return {"status": "ok"}
