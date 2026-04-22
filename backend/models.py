@@ -37,6 +37,8 @@ class Message(Base):
     is_read = Column(Boolean, default=False)
 
     conversation = relationship("Conversation", back_populates="messages")
+    whatsapp_id = Column(String, nullable=True)
+    status = Column(String, default="sent")
 
 
 class Agent(Base):
