@@ -156,7 +156,8 @@ export default function ChatPage() {
     loadMessages()
 
     const WS_URL = 'wss://nexsai-production.up.railway.app'
-    const socket = new WebSocket(`${WS_URL}/ws/${phone}`)
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10)
+    const socket = new WebSocket(`${WS_URL}/ws/${cleanPhone}`)
     socketRef.current = socket
 
     socket.onopen = () => {

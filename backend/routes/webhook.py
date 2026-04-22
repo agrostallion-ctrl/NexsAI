@@ -43,7 +43,7 @@ async def whatsapp_webhook(request: Request):
                 for msg in messages:
                     phone = msg["from"]
                     if phone.startswith("91"):
-                       phone = phone[2:]
+                       phone = phone[-10:]
                     text = msg.get("text", {}).get("body", "")
 
                     print("📩 MSG:", phone, text)
