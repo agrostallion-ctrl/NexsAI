@@ -1,5 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import Dict, List
+import asyncio
 
 router = APIRouter()
 
@@ -69,8 +70,9 @@ async def websocket_endpoint(websocket: WebSocket, key: str):
 
     try:
         while True:
-            # ping/pong keep alive
-            await websocket.receive_text()
+            # 🔥 heartbeat ping
+            await websocket.send_json({"type": "ping"})
+            await asyncio.sleep(25)  # every 25 sec
 
     except WebSocketDisconnect:
         manager.disconnect(key, websocket)
