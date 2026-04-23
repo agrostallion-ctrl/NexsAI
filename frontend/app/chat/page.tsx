@@ -246,142 +246,134 @@ export default function ChatPage() {
   }, [router, fetchContacts])
 
   useEffect(() => {
-    const phone = selected?.phone
-    if (!phone) return
+  const phone = selected?.phone
+  if (!phone) return
 
-    let alive = true
-    let retry = 0
-    let reconnectTimer: NodeJS.Timeout | null = null
+  let alive = true
+  let retry = 0
+  let reconnectTimer: NodeJS.Timeout | null = null
 
-    setMessages([])
-    setConnectionState('connecting')
-    setIsTyping(false)
-    setLastSeen(undefined)
+  setMessages([])
+  setConnectionState('connecting')
+  setIsTyping(false)
+  setLastSeen(undefined)
 
-    const loadMessages = async () => {
-      try {
-        const { data } = await api.get('/messages', { params: { phone } })
-        if (!alive) return
-        const msgs = Array.isArray(data) ? data : data?.messages || []
-        setMessages(msgs)
-        setTimeout(() => scrollToBottom(true), 100)
-      } catch (err) {
-        console.error('Messages error', err)
-      }
-    }
-
-    loadMessages()
-
-    const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'wss://nexsai-production.up.railway.app'
-
-    const connectWS = () => {
+  // -------------------------
+  // LOAD MESSAGES
+  // -------------------------
+  const loadMessages = async () => {
+    try {
+      const { data } = await api.get('/messages', { params: { phone } })
       if (!alive) return
 
-      // ✅ पुराना socket बंद करें पहले
-      if (socketRef.current) {
-        socketRef.current.onclose = null
-        socketRef.current.close()
-      }
+      const msgs = Array.isArray(data) ? data : data?.messages || []
+      setMessages(msgs)
 
-      const socket = new WebSocket(`${WS_URL}/ws/${phone}`)
-      socketRef.current = socket
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
 
-      socket.onopen = () => {
-        console.log('WS Connected')
-        setConnectionState('online')
-        retry = 0 // ✅ success पर retry reset
-      }
+    } catch (err) {
+      console.error('Messages error', err)
+    }
+  }
 
-      socket.onerror = () => {
-        console.log('WS Error')
-        setConnectionState('error')
-        socket.close() // ✅ onclose trigger होगा → reconnect loop चलेगा
-      }
+  loadMessages()
 
-      socket.onclose = () => {
-        console.log('WS Closed')
-        if (!alive) return
+  const WS_URL =
+    process.env.NEXT_PUBLIC_WS_URL ||
+    'wss://nexsai-production.up.railway.app'
 
-        // ✅ flicker fix — सिर्फ तभी offline दिखाएं जब actually बंद हो
-        if (socket.readyState !== WebSocket.OPEN) {
-          setConnectionState('offline')
-          setLastSeen(new Date().toISOString())
-        }
+  // -------------------------
+  // CONNECT WS
+  // -------------------------
+  const connectWS = () => {
+    if (!alive) return
 
-        // ✅ Exponential backoff: 3s → 6s → 9s ... max 15s
-        retry++
-        const delay = Math.min(3000 * retry, 15000)
-        console.log(`Reconnecting in ${delay}ms (attempt ${retry})`)
-        reconnectTimer = setTimeout(() => connectWS(), delay)
-      }
+    // 🛑 Prevent duplicate connections
+    if (socketRef.current?.readyState === WebSocket.OPEN) return
 
-      socket.onmessage = (event: MessageEvent) => {
-        try {
-          const data = JSON.parse(event.data)
-          // 🔥 ignore heartbeat ping
-          if (data.type === "ping") return
-          // ✅ Race condition — दूसरे contact का message ignore
-          if (data.phone && data.phone !== phone) return
-
-          if (data.type === 'typing') {
-            setIsTyping(true)
-            if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
-            typingTimerRef.current = setTimeout(() => setIsTyping(false), 3000)
-            return
-          }
-
-          if (data.type === 'typing_stop') { setIsTyping(false); return }
-
-          if (data.status) {
-            setMessages(prev =>
-              prev.map(msg =>
-                String(msg.id) === String(data.id)
-                  ? { ...msg, status: data.status, is_read: data.status === 'read' }
-                  : msg
-              )
-            )
-            return
-          }
-
-          setMessages(prev => {
-            const tempIndex = prev.findIndex(
-              m => String(m.id).startsWith('temp-') &&
-                m.content === data.content && m.sender === data.sender
-            )
-            if (tempIndex !== -1) {
-              const updated = [...prev]
-              updated[tempIndex] = data
-              return updated
-            }
-            if (prev.some(m => String(m.id) === String(data.id))) return prev
-            return [...prev, data]
-          })
-
-          setIsTyping(false)
-          if (data.sender === 'customer') updateContactLocally(phone, data.content, true)
-          scrollToBottom(false) // ✅ user scroll disturb नहीं होगा
-        } catch (e) {
-          console.error('WS parse error:', e)
-        }
-      }
+    if (socketRef.current) {
+      socketRef.current.onclose = null
+      socketRef.current.close()
     }
 
-    connectWS()
+    const socket = new WebSocket(`${WS_URL}/ws/${phone}`)
+    socketRef.current = socket
 
-    // ✅ Clean cleanup — ghost connections नहीं बनेंगी
-    return () => {
-      alive = false
+    socket.onopen = () => {
+      console.log('WS Connected')
+      setConnectionState('online')
+      retry = 0
+    }
 
-      if (reconnectTimer) clearTimeout(reconnectTimer)
-      if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+    socket.onerror = (err) => {
+      console.log('WS Error', err)
+      setConnectionState('error')
+      socket.close()
+    }
 
-      if (socketRef.current) {
-        socketRef.current.onclose = null // ✅ reconnect loop रोकें
-        socketRef.current.close()
-        socketRef.current = null
+    socket.onclose = () => {
+      console.log('WS Closed')
+
+      if (!alive) return
+
+      setConnectionState('offline')
+      setLastSeen(new Date().toISOString())
+
+      retry++
+      const delay = Math.min(3000 * retry, 15000)
+
+      reconnectTimer = setTimeout(() => {
+        connectWS()
+      }, delay)
+    }
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        const currentPhoneRef = useRef(phone)
+
+       useEffect(() => {
+       currentPhoneRef.current = phone
+        }, [phone])
+        // 🟢 ignore ping
+        if (data.type === "ping") {
+      socket.send(JSON.stringify({ type: "pong" }))
+      return
+      }
+
+        // 🟢 ignore other users
+        if (data.phone && data.phone !== currentPhoneRef.current) return
+        setMessages(prev => {
+       if (prev.some(m => m.id === data.id)) return prev
+      return [...prev, data]
+      })
+
+      } catch (e) {
+        console.error("WS parse error", e)
       }
     }
-  }, [selected?.phone, scrollToBottom, updateContactLocally])
+  }
+
+  connectWS()
+
+  // -------------------------
+  // CLEANUP
+  // -------------------------
+  return () => {
+    alive = false
+
+    if (reconnectTimer) clearTimeout(reconnectTimer)
+
+    if (socketRef.current) {
+      socketRef.current.onclose = null
+      socketRef.current.close()
+      socketRef.current = null
+    }
+  }
+
+}, [selected?.phone]) // ✅ ONLY dependency
 
   useEffect(() => {
     scrollToBottom()
