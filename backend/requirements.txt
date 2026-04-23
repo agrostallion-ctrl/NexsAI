@@ -37,3 +37,4 @@ websockets==16.0
 psycopg2-binary
 requests
 httpx
+pytz
