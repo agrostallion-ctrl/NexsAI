@@ -2,13 +2,20 @@ from fastapi import APIRouter, Request
 from fastapi.responses import PlainTextResponse
 from database import SessionLocal
 import models
-from zoneinfo import ZoneInfo
+import pytz
+from datetime import datetime
 from routes.socket import manager
 
 router = APIRouter()
 
 VERIFY_TOKEN = "nexusai123"
-ist = ZoneInfo("Asia/Kolkata")
+ist = pytz.timezone("Asia/Kolkata")
+def to_ist(dt):
+    if not dt:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=pytz.utc)
+    return dt.astimezone(ist).strftime("%I:%M %p")
 
 
 # ✅ VERIFY
