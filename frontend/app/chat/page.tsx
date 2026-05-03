@@ -1,25 +1,17 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react'
+import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '../../lib/api'
 
 interface Contact {
-  id: number
-  phone: string
-  name?: string
-  last_message?: string
-  unread_count?: number
-  last_seen?: string
+  id: number; phone: string; name?: string; last_message?: string;
+  unread_count?: number; last_seen?: string;
 }
 
 interface Message {
-  id: number | string
-  content: string
-  sender: 'customer' | 'agent' | string
-  timestamp?: string
-  is_read?: boolean
-  status?: 'sending' | 'sent' | 'delivered' | 'read'
+  id: number | string; content: string; sender: 'customer' | 'agent' | string;
+  timestamp?: string; is_read?: boolean; status?: 'sending' | 'sent' | 'delivered' | 'read';
 }
 
 type ConnectionState = 'connecting' | 'online' | 'offline' | 'error'
@@ -33,7 +25,7 @@ const getAvatarColor = (str: string) => {
 }
 
 const getInitials = (name: string) =>
-  name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+  name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
 const formatTime = (timestamp?: string) => {
   const d = timestamp ? new Date(timestamp) : new Date()
@@ -61,6 +53,17 @@ const formatDateSeparator = (timestamp?: string) => {
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+const Avatar = memo(({ name, size = 'w-10 h-10' }: { name: string; size?: string }) => (
+  <div
+    className={`${size} rounded-full flex items-center justify-center font-bold text-white shrink-0 shadow-inner`}
+    style={{ background: getAvatarColor(name) }}
+  >
+    {getInitials(name)}
+  </div>
+))
+Avatar.displayName = 'Avatar'
+
+// ── Tick Icons ─────────────────────────────────────────
 const SingleTick = () => (
   <svg width="12" height="11" viewBox="0 0 12 11" fill="none">
     <path d="M1 5.5L4 8.5L11 1.5" stroke="#8696a0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -68,10 +71,8 @@ const SingleTick = () => (
 )
 
 const DoubleTick = ({ blue }: { blue?: boolean }) => (
-  <svg
-    width="16" height="11" viewBox="0 0 16 11"
-    fill={blue ? "#53bdeb" : "#8696a0"}
-    className={blue ? "transition-all duration-500 ease-in-out scale-110" : "transition-all duration-300"}
+  <svg width="16" height="11" viewBox="0 0 16 11"
+    fill={blue ? '#53bdeb' : '#8696a0'}
     style={blue ? { filter: 'drop-shadow(0 0 3px #53bdeb)' } : {}}
   >
     <path d="M11.071.653a.45.45 0 01.749 0l.424.604a.45.45 0 01-.074.602l-5.47 4.7a.45.45 0 01-.613-.02L3.22 3.684a.45.45 0 01.012-.637l.437-.42a.45.45 0 01.628.013l1.923 1.96L11.071.652zm-1.43 5.15l.438-.42a.45.45 0 01.628.013l1.923 1.96 4.051-4.703a.45.45 0 01.749 0l.424.604a.45.45 0 01-.074.602l-5.47 4.7a.45.45 0 01-.613-.02L9.629 6.182a.45.45 0 01.012-.38z"/>
@@ -85,36 +86,6 @@ const MessageStatus = ({ msg }: { msg: Message }) => {
   return <DoubleTick />
 }
 
-const Avatar = memo(({ name, size = 'w-10 h-10' }: { name: string; size?: string }) => (
-  <div
-    className={`${size} rounded-full flex items-center justify-center font-bold text-white flex-shrink-0`}
-    style={{ background: getAvatarColor(name) }}
-  >
-    {getInitials(name)}
-  </div>
-))
-Avatar.displayName = 'Avatar'
-
-const MessageBubble = memo(({ msg }: { msg: Message }) => {
-  const isOut = msg.sender !== 'customer'
-  const isSending = String(msg.id).startsWith('temp-')
-  return (
-    <div className={`flex ${isOut ? 'justify-end' : 'justify-start'} mb-1 animate-in fade-in slide-in-from-bottom-1`}>
-      <div className={`max-w-[65%] min-w-[85px] px-3 pt-1.5 pb-6 relative rounded-lg shadow text-[14.5px] text-[#e9edef]
-        ${isOut ? 'bg-[#005c4b] rounded-tr-none' : 'bg-[#202c33] rounded-tl-none'}
-        ${isSending ? 'opacity-70' : 'opacity-100'} transition-opacity duration-200`}
-      >
-        {msg.content}
-        <span className="absolute bottom-1.5 right-2 text-[10.5px] text-white/40 flex items-center gap-1 select-none">
-          {formatTime(msg.timestamp)}
-          <MessageStatus msg={msg} />
-        </span>
-      </div>
-    </div>
-  )
-})
-MessageBubble.displayName = 'MessageBubble'
-
 const DateSeparator = ({ timestamp }: { timestamp?: string }) => (
   <div className="flex justify-center my-4">
     <span className="bg-[#182229] text-[#8696a0] text-[11px] font-bold px-3 py-1 rounded uppercase tracking-wider">
@@ -126,49 +97,12 @@ const DateSeparator = ({ timestamp }: { timestamp?: string }) => (
 const TypingIndicator = () => (
   <div className="flex justify-start mb-1">
     <div className="bg-[#202c33] rounded-lg rounded-tl-none px-4 py-3 flex items-center gap-1">
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          className="w-2 h-2 rounded-full bg-[#8696a0]"
+      {[0,1,2].map(i => (
+        <div key={i} className="w-2 h-2 rounded-full bg-[#8696a0]"
           style={{ animation: 'typing-bounce 1.2s infinite', animationDelay: `${i * 0.2}s` }}
         />
       ))}
     </div>
-  </div>
-)
-
-const UnreadBadge = ({ count }: { count?: number }) => {
-  if (!count || count === 0) return null
-  return (
-    <span className="bg-[#00a884] text-white text-[11px] font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center shrink-0">
-      {count > 99 ? '99+' : count}
-    </span>
-  )
-}
-
-const ConnectionBadge = ({ state, isTyping, lastSeen }: {
-  state: ConnectionState
-  isTyping: boolean
-  lastSeen?: string
-}) => {
-  if (isTyping) return <p className="text-[12px] font-medium text-[#00a884] animate-pulse">typing...</p>
-  const config = {
-    connecting: { color: 'text-yellow-400', text: 'connecting...' },
-    online:     { color: 'text-[#00a884]',  text: 'online' },
-    offline:    { color: 'text-gray-400',   text: lastSeen ? `last seen ${formatLastSeen(lastSeen)}` : 'offline' },
-    error:      { color: 'text-red-400',    text: 'connection error' },
-  }
-  const { color, text } = config[state]
-  return <p className={`text-[12px] font-medium ${color}`}>{text}</p>
-}
-
-const EmptyState = () => (
-  <div className="flex-1 flex flex-col items-center justify-center bg-[#111b21] text-[#8696a0] select-none">
-    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#25d366] to-[#128c7e] flex items-center justify-center font-bold text-white text-4xl shadow-2xl mb-6 opacity-80">
-      N
-    </div>
-    <h3 className="text-2xl font-light text-[#e9edef] mb-2">NexusAI for Stallionagro</h3>
-    <p className="text-sm opacity-50">Select a contact to begin chatting</p>
   </div>
 )
 
@@ -180,296 +114,308 @@ export default function ChatPage() {
   const [input, setInput] = useState('')
   const [search, setSearch] = useState('')
   const [isAuthed, setIsAuthed] = useState(false)
+  const [activeTab, setActiveTab] = useState<'chats' | 'groups' | 'status'>('chats')
   const [connectionState, setConnectionState] = useState<ConnectionState>('connecting')
-  const [isAtBottom, setIsAtBottom] = useState(true)
   const [isTyping, setIsTyping] = useState(false)
   const [lastSeen, setLastSeen] = useState<string | undefined>()
 
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const messagesContainerRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const socketRef = useRef<WebSocket | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null)
+  // ✅ useRef — re-render पर reset नहीं होगा
+  const retryRef = useRef(0)
+  // ✅ phone को ref में रखें — closure safety के लिए
+  const phoneRef = useRef<string | null>(null)
 
-  const scrollToBottom = useCallback((force = false) => {
-    if (force || isAtBottom) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [isAtBottom])
-
-  const handleScroll = useCallback(() => {
-    const container = messagesContainerRef.current
-    if (!container) return
-    const { scrollTop, scrollHeight, clientHeight } = container
-    setIsAtBottom(scrollHeight - scrollTop - clientHeight < 50)
-  }, [])
-
-  const updateContactLocally = useCallback((phone: string, lastMessage: string, isIncoming = false) => {
-    setContacts(prev => {
-      const contactIndex = prev.findIndex(c => c.phone === phone)
-      if (contactIndex === -1) return prev
-      const updatedContacts = [...prev]
-      const [contact] = updatedContacts.splice(contactIndex, 1)
-      updatedContacts.unshift({
-        ...contact,
-        last_message: lastMessage,
-        unread_count: isIncoming ? (contact.unread_count || 0) + 1 : contact.unread_count
-      })
-      return updatedContacts
-    })
-  }, [])
-
-  const selectContact = useCallback((contact: Contact) => {
-    setSelected(contact)
-    setContacts(prev =>
-      prev.map(c => c.phone === contact.phone ? { ...c, unread_count: 0 } : c)
-    )
-    // Optional: api.post('/read', { phone: contact.phone }).catch(() => {})
-  }, [])
-
-  const fetchContacts = useCallback(async () => {
-    try {
-      const { data } = await api.get('/contacts')
-      const contactList = Array.isArray(data) ? data : []
-      setContacts(contactList)
-      if (contactList.length > 0 && !selected) setSelected(contactList[0])
-    } catch (err) {
-      console.error('Contacts error', err)
-    }
-  }, [selected])
-
+  // ── Auth ───────────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem('auth_token')
     if (!token) { router.push('/login'); return }
     setIsAuthed(true)
-    fetchContacts()
-  }, [router, fetchContacts])
+  }, [router])
 
+  // ── Load Contacts ──────────────────────────────────
   useEffect(() => {
-  const phone = selected?.phone
-  if (!phone) return
+    if (!isAuthed) return
+    api.get('/contacts').then(({ data }) => {
+      const list = Array.isArray(data) ? data : []
+      setContacts(list)
+    }).catch(err => console.error('Contacts error', err))
+  }, [isAuthed])
 
-  let alive = true
-  let retry = 0
-  let reconnectTimer: NodeJS.Timeout | null = null
+  // ── Sidebar update — contact top पर + unread ───────
+  const updateSidebar = useCallback((phone: string, text: string, isIncoming: boolean) => {
+    setContacts(prev => {
+      const idx = prev.findIndex(c => c.phone === phone)
+      if (idx === -1) return prev
+      const arr = [...prev]
+      const [contact] = arr.splice(idx, 1)
+      arr.unshift({
+        ...contact,
+        last_message: text,
+        // ✅ सिर्फ incoming और currently not selected हो तो unread बढ़े
+        unread_count: isIncoming && phoneRef.current !== phone
+          ? (contact.unread_count || 0) + 1
+          : contact.unread_count
+      })
+      return arr
+    })
+  }, [])
 
-  setMessages([])
-  setConnectionState('connecting')
-  setIsTyping(false)
-  setLastSeen(undefined)
+  // ── Select Contact — unread clear ─────────────────
+  const selectContact = useCallback((contact: Contact) => {
+    setSelected(contact)
+    phoneRef.current = contact.phone
+    setContacts(prev =>
+      prev.map(c => c.phone === contact.phone ? { ...c, unread_count: 0 } : c)
+    )
+  }, [])
 
-  // -------------------------
-  // LOAD MESSAGES
-  // -------------------------
-  const loadMessages = async () => {
-    try {
-      const { data } = await api.get('/messages', { params: { phone } })
+  // ── WebSocket + Message History ────────────────────
+  useEffect(() => {
+    const phone = selected?.phone
+    if (!phone) return
+
+    // ✅ alive flag — cleanup के बाद कुछ नहीं चलेगा
+    let alive = true
+    let reconnectTimer: NodeJS.Timeout | null = null
+
+    retryRef.current = 0
+    setMessages([])
+    setConnectionState('connecting')
+    setIsTyping(false)
+    setLastSeen(undefined)
+
+    // Load history
+    api.get('/messages', { params: { phone } }).then(({ data }) => {
       if (!alive) return
-
       const msgs = Array.isArray(data) ? data : data?.messages || []
       setMessages(msgs)
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+    }).catch(err => console.error('Messages error', err))
 
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-      }, 100)
+    const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'wss://nexsai-production.up.railway.app'
 
-    } catch (err) {
-      console.error('Messages error', err)
-    }
-  }
-
-  loadMessages()
-
-  const WS_URL =
-    process.env.NEXT_PUBLIC_WS_URL ||
-    'wss://nexsai-production.up.railway.app'
-
-  // -------------------------
-  // CONNECT WS
-  // -------------------------
-  const connectWS = () => {
-    if (!alive) return
-
-    // 🛑 Prevent duplicate connections
-    if (socketRef.current?.readyState === WebSocket.OPEN) return
-
-    if (socketRef.current) {
-      socketRef.current.onclose = null
-      socketRef.current.close()
-    }
-
-    const socket = new WebSocket(`${WS_URL}/ws/${phone}`)
-    socketRef.current = socket
-
-    socket.onopen = () => {
-      console.log('WS Connected')
-      setConnectionState('online')
-      retry = 0
-    }
-
-    socket.onerror = (err) => {
-      console.log('WS Error', err)
-      setConnectionState('error')
-      socket.close()
-    }
-
-    socket.onclose = () => {
-      console.log('WS Closed')
-
+    const connectWS = () => {
       if (!alive) return
 
-      setConnectionState('offline')
-      setLastSeen(new Date().toISOString())
+      // ✅ duplicate connection रोकें
+      if (socketRef.current?.readyState === WebSocket.OPEN) return
 
-      retry++
-      const delay = Math.min(3000 * retry, 15000)
-
-      reconnectTimer = setTimeout(() => {
-        connectWS()
-      }, delay)
-    }
-
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        const currentPhoneRef = useRef(phone)
-
-       useEffect(() => {
-       currentPhoneRef.current = phone
-        }, [phone])
-        // 🟢 ignore ping
-        if (data.type === "ping") {
-      socket.send(JSON.stringify({ type: "pong" }))
-      return
+      if (socketRef.current) {
+        socketRef.current.onclose = null
+        socketRef.current.close()
       }
 
-        // 🟢 ignore other users
-        if (data.phone && data.phone !== currentPhoneRef.current) return
-        setMessages(prev => {
-       if (prev.some(m => m.id === data.id)) return prev
-      return [...prev, data]
-      })
+      const socket = new WebSocket(`${WS_URL}/ws/${phone}`)
+      socketRef.current = socket
 
-      } catch (e) {
-        console.error("WS parse error", e)
+      socket.onopen = () => {
+        console.log('WS Connected')
+        setConnectionState('online')
+        retryRef.current = 0 // ✅ success पर reset
+      }
+
+      socket.onerror = (err) => {
+        console.log('WS Error', err)
+        setConnectionState('error')
+        socket.close() // ✅ onclose trigger → reconnect चलेगा
+      }
+
+      socket.onclose = () => {
+        console.log('WS Closed')
+        if (!alive) return
+
+        // ✅ readyState check — flicker नहीं होगा
+        if (socket.readyState !== WebSocket.OPEN) {
+          setConnectionState('offline')
+          setLastSeen(new Date().toISOString())
+        }
+
+        // ✅ Exponential backoff — 3s → 6s → ... max 15s
+        retryRef.current++
+        const delay = Math.min(3000 * retryRef.current, 15000)
+        console.log(`Reconnecting in ${delay}ms (attempt ${retryRef.current})`)
+        // ✅ reconnect timer save करें cleanup के लिए
+        reconnectTimer = setTimeout(() => connectWS(), delay)
+      }
+
+      socket.onmessage = (event: MessageEvent) => {
+        try {
+          const data = JSON.parse(event.data)
+
+          // ✅ ping/pong — server alive रखें
+          if (data.type === 'ping') {
+            socket.send(JSON.stringify({ type: 'pong' }))
+            return
+          }
+
+          // ✅ दूसरे contact का message ignore करें — closure से phone compare
+          if (data.phone && data.phone !== phone) return
+
+          // ✅ typing indicator
+          if (data.type === 'typing') {
+            setIsTyping(true)
+            if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+            typingTimerRef.current = setTimeout(() => setIsTyping(false), 3000)
+            return
+          }
+
+          if (data.type === 'typing_stop') {
+            setIsTyping(false)
+            return
+          }
+
+          // ✅ status update
+          if (data.status) {
+            setMessages(prev =>
+              prev.map(msg =>
+                String(msg.id) === String(data.id)
+                  ? { ...msg, status: data.status, is_read: data.status === 'read' }
+                  : msg
+              )
+            )
+            return
+          }
+
+          // ✅ normal message — temp replace या duplicate skip
+          setMessages(prev => {
+            const tempIdx = prev.findIndex(
+              m => String(m.id).startsWith('temp-') &&
+                m.content === data.content && m.sender === data.sender
+            )
+            if (tempIdx !== -1) {
+              const updated = [...prev]
+              updated[tempIdx] = data
+              return updated
+            }
+            if (prev.some(m => String(m.id) === String(data.id))) return prev
+            return [...prev, data]
+          })
+
+          setIsTyping(false)
+          if (data.sender === 'customer') updateSidebar(phone, data.content, true)
+          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+        } catch (e) {
+          console.error('WS parse error:', e)
+        }
       }
     }
-  }
 
-  connectWS()
+    connectWS()
 
-  // -------------------------
-  // CLEANUP
-  // -------------------------
-  return () => {
-    alive = false
-
-    if (reconnectTimer) clearTimeout(reconnectTimer)
-
-    if (socketRef.current) {
-      socketRef.current.onclose = null
-      socketRef.current.close()
-      socketRef.current = null
+    // ✅ Clean cleanup — ghost connections नहीं बनेंगी
+    return () => {
+      alive = false
+      if (reconnectTimer) clearTimeout(reconnectTimer) // ✅ pending reconnect cancel
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+      if (socketRef.current) {
+        socketRef.current.onclose = null // ✅ reconnect loop रोकें
+        socketRef.current.close()
+        socketRef.current = null
+      }
     }
-  }
+  }, [selected?.phone, updateSidebar])
 
-}, [selected?.phone]) // ✅ ONLY dependency
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages, scrollToBottom])
-
-  const handleSendMessage = async () => {
+  // ── Send Message ───────────────────────────────────
+  const handleSend = async () => {
     if (!input.trim() || !selected) return
-
-    const tempId = `temp-${Date.now()}`
     const content = input.trim()
+    const tempId = `temp-${Date.now()}`
 
-    const tempMsg: Message = {
-      id: tempId,
-      content,
-      sender: 'agent',
-      timestamp: new Date().toISOString(),
-      is_read: false,
-      status: 'sending'
-    }
-
-    setMessages(prev => [...prev, tempMsg])
+    setMessages(prev => [...prev, {
+      id: tempId, content, sender: 'agent',
+      timestamp: new Date().toISOString(), status: 'sending'
+    }])
     setInput('')
-    if (textareaRef.current) textareaRef.current.style.height = 'auto'
-    scrollToBottom(true)
+    if (textareaRef.current) textareaRef.current.style.height = '45px'
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
 
     try {
       const { data } = await api.post('/send', { phone: selected.phone, message: content })
       setMessages(prev =>
-        prev.map(m => m.id === tempId
-          ? { ...m, id: data?.id || tempId, status: 'sent', is_read: false }
-          : m
-        )
+        prev.map(m => m.id === tempId ? { ...m, id: data?.id || tempId, status: 'sent' } : m)
       )
-      updateContactLocally(selected.phone, content, false)
+      updateSidebar(selected.phone, content, false) // ✅ outgoing — unread नहीं बढ़ेगा
     } catch (err) {
       console.error('Send failed', err)
       setMessages(prev => prev.filter(m => m.id !== tempId))
     }
   }
 
+  const filteredContacts = useMemo(() =>
+    contacts.filter(c => (c.name || c.phone).toLowerCase().includes(search.toLowerCase())),
+  [contacts, search])
+
   if (!isAuthed) return null
 
-  const filteredContacts = contacts.filter((c) =>
-    (c.name || c.phone).toLowerCase().includes(search.toLowerCase())
-  )
-
   return (
-    <div className="h-screen flex bg-[#111b21] text-white overflow-hidden" style={{ fontFamily: 'Nunito, sans-serif' }}>
+    <div className="h-screen flex bg-[#111b21] text-[#e9edef] overflow-hidden antialiased font-sans">
 
-      {/* SIDEBAR */}
-      <aside className="w-[360px] min-w-[300px] flex flex-col border-r border-[#2a3942] bg-[#202c33] z-20">
-        <header className="flex items-center justify-between px-4 py-2.5 bg-[#202c33] border-b border-[#2a3942]">
+      {/* ── SIDEBAR ──────────────────────────────────── */}
+      <aside className="w-[420px] border-r border-[#2a3942] flex flex-col bg-[#202c33]">
+        <header className="p-4 flex justify-between items-center bg-[#202c33]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#25d366] to-[#128c7e] flex items-center justify-center font-bold text-white shadow-lg">N</div>
-            <span className="text-lg font-bold text-[#e9edef]">NexusAI</span>
+            <h1 className="text-xl font-bold text-white">NexusAI</h1>
           </div>
-          <div className={`w-2 h-2 rounded-full transition-colors ${
+          {/* ✅ Connection dot */}
+          <div className={`w-2.5 h-2.5 rounded-full transition-colors ${
             connectionState === 'online'  ? 'bg-[#00a884]' :
             connectionState === 'error'   ? 'bg-red-400' :
             connectionState === 'offline' ? 'bg-gray-400' : 'bg-yellow-400'
           }`} />
         </header>
 
-        <div className="px-3 py-2">
-          <div className="flex items-center gap-2 bg-[#2a3942] rounded-lg px-3 py-1.5 border border-transparent focus-within:border-[#00a884]/50">
-            <svg width="16" height="16" fill="none" stroke="#8696a0" strokeWidth="2" viewBox="0 0 24 24">
+        {/* Search */}
+        <div className="px-4 py-2 bg-[#111b21]">
+          <div className="bg-[#202c33] flex items-center px-4 py-1.5 rounded-lg border border-transparent focus-within:border-[#00a884]/40">
+            <svg className="mr-3 shrink-0" width="16" height="16" fill="none" stroke="#8696a0" strokeWidth="2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
             </svg>
             <input
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#8696a0]"
-              placeholder="Search or start new chat"
+              className="bg-transparent w-full text-sm outline-none placeholder-[#8696a0]"
+              placeholder="Search StallionAgro contacts..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
         </div>
 
+        {/* Tab Switcher */}
+        <div className="flex text-[13px] font-medium border-b border-[#2a3942] text-[#8696a0] bg-[#111b21]">
+          {(['chats', 'groups', 'status'] as const).map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-3 uppercase tracking-wider transition-all ${activeTab === tab ? 'text-[#00a884] border-b-2 border-[#00a884]' : 'hover:text-[#e9edef]'}`}>
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Contact List */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {filteredContacts.length === 0 ? (
             <p className="text-center text-[#8696a0] text-sm mt-10 opacity-50">No contacts found</p>
-          ) : filteredContacts.map((c) => (
-            <div
-              key={c.id}
-              onClick={() => selectContact(c)}
-              className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-[#2a3942]/30 transition-colors
-                ${selected?.id === c.id ? 'bg-[#2a3942]' : 'hover:bg-[#2a3942]/50'}`}
+          ) : filteredContacts.map(c => (
+            <div key={c.id} onClick={() => selectContact(c)}
+              className={`flex items-center gap-4 px-4 py-3 cursor-pointer transition-colors ${selected?.id === c.id ? 'bg-[#2a3942]' : 'hover:bg-[#2a3942]/60'}`}
             >
               <Avatar name={c.name || c.phone} size="w-12 h-12" />
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-baseline mb-1">
-                  <span className="font-semibold text-[15px] truncate text-[#e9edef]">{c.name || c.phone}</span>
-                  <span className="text-[11px] text-[#8696a0] shrink-0 ml-2">{c.last_seen ? formatTime(c.last_seen) : ''}</span>
+              <div className="flex-1 border-b border-[#2a3942] pb-3 min-w-0">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-[16px] text-[#e9edef] truncate">{c.name || c.phone}</span>
+                  <span className="text-[11px] text-[#8696a0] shrink-0 ml-2">
+                    {c.last_seen ? formatTime(c.last_seen) : ''}
+                  </span>
                 </div>
-                <div className="flex justify-between items-center gap-2">
-                  <div className="text-[13px] text-[#8696a0] truncate">{c.last_message || 'Start chatting...'}</div>
-                  <UnreadBadge count={c.unread_count} />
+                <div className="flex justify-between items-center mt-1 gap-2">
+                  <p className="text-sm text-[#8696a0] truncate">{c.last_message || 'Start chatting...'}</p>
+                  {!!c.unread_count && c.unread_count > 0 && (
+                    <span className="bg-[#00a884] text-white text-[11px] font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center shrink-0">
+                      {c.unread_count > 99 ? '99+' : c.unread_count}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -477,80 +423,114 @@ export default function ChatPage() {
         </div>
       </aside>
 
-      {/* CHAT AREA */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#0b141a] relative">
+      {/* ── CHAT AREA ────────────────────────────────── */}
+      <main className="flex-1 flex flex-col bg-[#0b141a] relative">
         {selected ? (
           <>
-            <header className="flex items-center gap-3 px-4 py-2.5 bg-[#202c33] border-b border-[#2a3942] z-10 shadow-sm">
-              <Avatar name={selected.name || selected.phone} />
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[15px] text-[#e9edef] truncate">{selected.name || selected.phone}</p>
-                <ConnectionBadge state={connectionState} isTyping={isTyping} lastSeen={lastSeen} />
+            <header className="h-[60px] bg-[#202c33] px-4 flex items-center justify-between z-20 shadow-md">
+              <div className="flex items-center gap-4">
+                <Avatar name={selected.name || selected.phone} />
+                <div>
+                  <h2 className="font-bold text-[16px] leading-tight truncate">{selected.name || selected.phone}</h2>
+                  <span className={`text-[12px] font-medium ${
+                    isTyping ? 'text-[#00a884] animate-pulse' :
+                    connectionState === 'online' ? 'text-[#00a884]' :
+                    connectionState === 'offline' ? 'text-gray-400' :
+                    connectionState === 'error' ? 'text-red-400' : 'text-yellow-400'
+                  }`}>
+                    {isTyping ? 'typing...' :
+                     connectionState === 'offline' && lastSeen ? `last seen ${formatLastSeen(lastSeen)}` :
+                     connectionState}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-5 text-[#aebac1] text-lg">
+                <button className="hover:text-white transition-colors">🔍</button>
+                <button className="hover:text-white transition-colors">⋮</button>
               </div>
             </header>
 
-            <div
-              ref={messagesContainerRef}
-              onScroll={handleScroll}
-              className="flex-1 overflow-y-auto custom-scrollbar relative"
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto px-10 py-6 custom-scrollbar relative"
+              style={{ backgroundImage: "url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')", backgroundRepeat: 'repeat', backgroundSize: 'auto' }}
             >
-              <div
-                className="absolute inset-0 z-0 opacity-[0.06] pointer-events-none"
-                style={{ backgroundImage: "url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')", backgroundRepeat: 'repeat' }}
-              />
-              <div className="relative z-10 px-[7%] py-4 flex flex-col">
+              {/* bg overlay */}
+              <div className="absolute inset-0 bg-[#0b141a]/94 pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col space-y-1">
                 {messages.map((m, i) => {
-                  const prevMsg = messages[i - 1]
-                  const showDate = !prevMsg ||
-                    new Date(m.timestamp ?? '').toDateString() !== new Date(prevMsg.timestamp ?? '').toDateString()
+                  const prev = messages[i - 1]
+                  const showDate = !prev ||
+                    new Date(m.timestamp ?? '').toDateString() !== new Date(prev.timestamp ?? '').toDateString()
+                  const isOut = m.sender !== 'customer'
+                  const isSending = String(m.id).startsWith('temp-')
+
                   return (
                     <React.Fragment key={m.id}>
                       {showDate && <DateSeparator timestamp={m.timestamp} />}
-                      <MessageBubble msg={m} />
+                      <div className={`flex ${isOut ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[65%] min-w-[85px] px-3 pt-1.5 pb-6 relative rounded-lg text-[14.5px] shadow-sm
+                          ${isOut ? 'bg-[#005c4b] rounded-tr-none' : 'bg-[#202c33] rounded-tl-none'}
+                          ${isSending ? 'opacity-60' : 'opacity-100'} transition-opacity duration-200`}
+                        >
+                          {m.content}
+                          <span className="absolute bottom-1.5 right-2 text-[10.5px] text-white/40 flex items-center gap-1 select-none">
+                            {formatTime(m.timestamp)}
+                            <MessageStatus msg={m} />
+                          </span>
+                        </div>
+                      </div>
                     </React.Fragment>
                   )
                 })}
                 {isTyping && <TypingIndicator />}
-                <div ref={messagesEndRef} className="h-2" />
+                <div ref={messagesEndRef} />
               </div>
             </div>
 
-            <footer className="flex items-end gap-2 px-4 py-3 bg-[#202c33] border-t border-[#2a3942]">
-              <div className="flex-1 flex items-center bg-[#2a3942] rounded-2xl px-4 py-1 gap-3 min-h-[46px]">
-                <span className="text-xl cursor-pointer select-none">😊</span>
-                <textarea
-                  ref={textareaRef}
-                  className="flex-1 bg-transparent outline-none text-[14.5px] resize-none py-2.5 max-h-32 overflow-y-auto custom-scrollbar placeholder:text-[#8696a0]"
-                  placeholder="Type a message"
-                  rows={1}
-                  value={input}
-                  onChange={(e) => {
-                    setInput(e.target.value)
-                    e.target.style.height = 'auto'
-                    e.target.style.height = Math.min(e.target.scrollHeight, 128) + 'px'
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      if (input.trim()) handleSendMessage()
-                    }
-                  }}
-                />
-              </div>
+            {/* Footer */}
+            <footer className="bg-[#202c33] px-4 py-2 flex items-end gap-3 min-h-[62px]">
+              <button className="p-2 text-[#8696a0] text-2xl hover:text-white transition-colors select-none">😊</button>
+              <button className="p-2 text-[#8696a0] text-2xl hover:text-white transition-colors select-none">📎</button>
+              <textarea
+                ref={textareaRef}
+                className="flex-1 bg-[#2a3942] rounded-lg px-4 py-2.5 outline-none text-sm resize-none custom-scrollbar placeholder-[#8696a0]"
+                placeholder="Type a message"
+                rows={1}
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value)
+                  e.target.style.height = '45px'
+                  e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px'
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    if (input.trim()) handleSend()
+                  }
+                }}
+              />
               <button
-                onClick={handleSendMessage}
+                onClick={handleSend}
                 disabled={!input.trim()}
-                className="w-12 h-12 rounded-full bg-[#00a884] flex items-center justify-center hover:bg-[#00c99e] active:scale-90 transition-all shadow-xl disabled:bg-[#3b4a54] disabled:cursor-not-allowed"
+                className="bg-[#00a884] p-3 rounded-full hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg"
               >
-                <svg width="22" height="22" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>
               </button>
             </footer>
           </>
         ) : (
-          <EmptyState />
+          <div className="flex-1 flex flex-col items-center justify-center text-[#8696a0] select-none">
+            <div className="w-32 h-32 bg-gradient-to-br from-[#25d366] to-[#128c7e] rounded-full flex items-center justify-center text-white text-6xl font-bold mb-6 shadow-2xl opacity-80">
+              N
+            </div>
+            <h2 className="text-3xl font-light text-[#e9edef]">NexusAI for StallionAgro</h2>
+            <p className="mt-4 text-sm max-w-sm text-center opacity-60">
+              Connect with farmers and suppliers instantly. Real-time agricultural commerce powered by NexusAI.
+            </p>
+          </div>
         )}
       </main>
 
@@ -558,7 +538,6 @@ export default function ChatPage() {
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #374045; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-
         @keyframes typing-bounce {
           0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
           30% { transform: translateY(-6px); opacity: 1; }
