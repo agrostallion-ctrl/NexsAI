@@ -1,14 +1,15 @@
+# 📁 FILE: backend/routes/whatsapp.py
+
 import os
 import logging
-import requests
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
-import models
+from pydantic import BaseModel
 from dependencies import get_db
+import models
 from utils.auth_utils import get_current_active_agent
 
-# 📝 Logger Setup
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
@@ -16,142 +17,152 @@ router = APIRouter(
     tags=["WhatsApp Setup"]
 )
 
-# 🔐 Environment Variables (Ensure these are in your .env file)
-META_APP_ID = os.getenv("META_APP_ID", "YOUR_META_APP_ID")
-META_APP_SECRET = os.getenv("META_APP_SECRET", "YOUR_META_APP_SECRET")
+# 🔐 Meta App Config
+META_APP_ID = os.getenv("META_APP_ID")
+META_APP_SECRET = os.getenv("META_APP_SECRET")
+VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
+BACKEND_URL = os.getenv("BACKEND_URL")  # Example: https://your-railway-app.up.railway.app
+
 
 # 📋 FRONTEND TOKEN INPUT
 class WhatsAppCredentials(BaseModel):
-    access_token: str = Field(..., min_length=20)
-
-# 📋 RESPONSE MODEL
-class WhatsAppSaveResponse(BaseModel):
-    status: str
-    message: str
+    access_token: str
+    whatsapp_business_account_id: str
     phone_number_id: str
+    meta_business_id: str | None = None
 
 
-# 🛠️ HELPER 1: Convert Short-Lived Token to 60-Day Token
-def get_long_lived_token(short_token: str) -> str:
-    """Exchange a short-lived token for a 60-day long-lived token."""
-    url = "https://graph.facebook.com/v20.0/oauth/access_token"
+# 🚀 AUTO SUBSCRIBE FUNCTION
+async def subscribe_app_to_whatsapp_business(
+    access_token: str,
+    whatsapp_business_account_id: str
+):
+    """
+    Automatically subscribes your app to client's WABA
+    """
+    url = f"https://graph.facebook.com/v22.0/{whatsapp_business_account_id}/subscribed_apps"
+
     params = {
-        "grant_type": "fb_exchange_token",
-        "client_id": META_APP_ID,
-        "client_secret": META_APP_SECRET,
-        "fb_exchange_token": short_token
+        "access_token": access_token
     }
-    
-    response = requests.get(url, params=params)
-    
-    if response.status_code != 200:
-        logger.error(f"Token Exchange Error: {response.text}")
-        raise Exception("Failed to get long-lived token from Meta.")
-        
-    return response.json().get("access_token")
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(
+            url,
+            params=params
+        )
+
+        logger.info(f"📡 Subscription Response: {response.text}")
+
+        if response.status_code not in [200, 201]:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Meta subscription failed: {response.text}"
+            )
+
+        return response.json()
 
 
-# 🛠️ HELPER 2: Fetch Meta IDs (Business, WABA, Phone)
-def fetch_whatsapp_business_data(access_token: str) -> dict:
-    """Fetch Business ID, WABA ID, and Phone Number ID from Meta Graph API."""
-    headers = {"Authorization": f"Bearer {access_token}"}
-    
-    # Using a session for faster, connection-pooled requests
-    session = requests.Session()
-    session.headers.update(headers)
+# 🚀 OPTIONAL WEBHOOK FIELD SETUP
+async def verify_webhook_fields(access_token: str, app_id: str):
+    """
+    Ensures webhook fields are configured
+    """
+    url = f"https://graph.facebook.com/v22.0/{app_id}/subscriptions"
 
-    try:
-        # Step 1: Get Businesses
-        res = session.get("https://graph.facebook.com/v20.0/me/businesses")
-        res.raise_for_status()
-        businesses = res.json().get("data", [])
-        if not businesses: 
-            raise Exception("No Meta business account found.")
-        business_id = businesses[0]["id"]
+    params = {
+        "object": "whatsapp_business_account",
+        "callback_url": f"{BACKEND_URL}/whatsapp/webhook",
+        "verify_token": VERIFY_TOKEN,
+        "fields": "messages,message_template_status_update,message_template_quality_update",
+        "access_token": access_token
+    }
 
-        # Step 2: Get WhatsApp Business Accounts (WABA)
-        res = session.get(f"https://graph.facebook.com/v20.0/{business_id}/owned_whatsapp_business_accounts")
-        res.raise_for_status()
-        wabas = res.json().get("data", [])
-        if not wabas: 
-            raise Exception("No WhatsApp Business Account found.")
-        waba_id = wabas[0]["id"]
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(
+            url,
+            params=params
+        )
 
-        # Step 3: Get Phone Number ID
-        res = session.get(f"https://graph.facebook.com/v20.0/{waba_id}/phone_numbers")
-        res.raise_for_status()
-        phones = res.json().get("data", [])
-        if not phones: 
-            raise Exception("No WhatsApp phone number found.")
-        phone_number_id = phones[0]["id"]
+        logger.info(f"🔗 Webhook Config Response: {response.text}")
 
-        return {
-            "meta_business_id": business_id,
-            "whatsapp_business_account_id": waba_id,
-            "phone_number_id": phone_number_id
-        }
-    except Exception as e:
-        logger.error(f"Meta Graph API Error: {str(e)}")
-        raise Exception(f"Meta API Error: {str(e)}")
+        return response.json()
 
 
-# 🚀 MAIN ROUTE: Save Client Meta WhatsApp Credentials
-@router.post(
-    "/save-credentials",
-    response_model=WhatsAppSaveResponse,
-    status_code=status.HTTP_200_OK
-)
-def save_whatsapp_credentials(
+# 🟢 SAVE CLIENT META CREDENTIALS + AUTO ACTIVATE
+@router.post("/save-credentials", status_code=status.HTTP_200_OK)
+async def save_whatsapp_credentials(
     data: WhatsAppCredentials,
     db: Session = Depends(get_db),
     current_agent: models.Agent = Depends(get_current_active_agent)
 ):
     """
-    Process:
-    1. Authenticate user.
-    2. Extend access token life to 60 days.
-    3. Fetch Meta Business IDs.
-    4. Save to the database.
+    Full Embedded Signup Automation:
+    1. Save client credentials
+    2. Subscribe app automatically
+    3. Activate webhook
     """
 
-    # 🏢 Find company tied to the active agent
     company = db.query(models.Company).filter(
         models.Company.id == current_agent.company_id
     ).first()
 
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company profile not found."
+            status_code=404,
+            detail="Company profile not found"
         )
 
     try:
-        # Step 1: Extend token validity
-        long_lived_token = get_long_lived_token(data.access_token)
+        # =========================
+        # 💾 SAVE CLIENT TOKENS
+        # =========================
+        company.access_token = data.access_token
+        company.whatsapp_business_account_id = data.whatsapp_business_account_id
+        company.phone_number_id = data.phone_number_id
 
-        # Step 2: Fetch data from Meta using the new long token
-        meta_data = fetch_whatsapp_business_data(long_lived_token)
-
-        # Step 3: Save all credentials to the database
-        company.access_token = long_lived_token
-        company.meta_business_id = meta_data["meta_business_id"]
-        company.whatsapp_business_account_id = meta_data["whatsapp_business_account_id"]
-        company.phone_number_id = meta_data["phone_number_id"]
+        if data.meta_business_id:
+            company.meta_business_id = data.meta_business_id
 
         db.commit()
-        db.refresh(company)
+
+        # =========================
+        # 📡 SUBSCRIBE APP TO CLIENT WABA
+        # =========================
+        subscription_result = await subscribe_app_to_whatsapp_business(
+            access_token=data.access_token,
+            whatsapp_business_account_id=data.whatsapp_business_account_id
+        )
+
+        # =========================
+        # 🔗 OPTIONAL WEBHOOK ENSURE
+        # =========================
+        webhook_result = await verify_webhook_fields(
+            access_token=data.access_token,
+            app_id=META_APP_ID
+        )
+
+        logger.info(
+            f"✅ Client {company.id} onboarding complete."
+        )
 
         return {
             "status": "success",
-            "message": "WhatsApp Business Account linked successfully!",
-            "phone_number_id": company.phone_number_id
+            "message": "WhatsApp Business Account linked and subscribed successfully.",
+            "company_id": company.id,
+            "phone_number_id": company.phone_number_id,
+            "subscription": subscription_result,
+            "webhook": webhook_result
         }
 
     except Exception as e:
         db.rollback()
-        logger.error(f"WhatsApp Onboarding Error | Company ID: {current_agent.company_id} | Error: {str(e)}")
-        
+
+        logger.error(
+            f"❌ WhatsApp onboarding failed: {str(e)}"
+        )
+
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            status_code=500,
+            detail="Failed to complete WhatsApp onboarding."
         )
