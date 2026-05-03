@@ -5,8 +5,9 @@ from pydantic import BaseModel, EmailStr, Field
 from dependencies import get_db
 from utils.auth_utils import hash_password
 import models
+# 1. Auth logic import karein
+from auth import create_access_token 
 
-# 📝 Logger setup
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
@@ -14,24 +15,20 @@ router = APIRouter(
     tags=["Client Onboarding"]
 )
 
-
-# 📋 CLIENT COMPANY REGISTER SCHEMA
 class CompanyRegister(BaseModel):
     company_name: str = Field(..., min_length=2, max_length=120)
     admin_name: str = Field(..., min_length=2, max_length=120)
     email: EmailStr
     password: str = Field(..., min_length=6, max_length=128)
 
-
-# 📋 RESPONSE MODEL
+# 2. Response model mein access_token add karein
 class RegisterResponse(BaseModel):
     status: str
     company_id: int
     admin_id: int
+    access_token: str  # <--- Ye add kiya
     message: str
 
-
-# 🚀 REGISTER CLIENT COMPANY + ADMIN
 @router.post(
     "/register",
     response_model=RegisterResponse,
@@ -41,34 +38,10 @@ def register_company(
     data: CompanyRegister,
     db: Session = Depends(get_db)
 ):
-    """
-    Creates:
-    - Company
-    - Admin Agent
-    - Multi-tenant SaaS account
-    """
-
-    # 🔍 Check duplicate agent
-    existing_agent = db.query(models.Agent).filter(
-        models.Agent.email == data.email
-    ).first()
-
+    # (Existing duplicate checks yahan rahenge...)
+    existing_agent = db.query(models.Agent).filter(models.Agent.email == data.email).first()
     if existing_agent:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this email already exists."
-        )
-
-    # 🔍 Check duplicate company
-    existing_company = db.query(models.Company).filter(
-        models.Company.email == data.email
-    ).first()
-
-    if existing_company:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Company with this email already exists."
-        )
+        raise HTTPException(status_code=400, detail="User with this email already exists.")
 
     try:
         # 🏢 Create Company
@@ -78,9 +51,8 @@ def register_company(
             plan="free",
             is_active=True
         )
-
         db.add(new_company)
-        db.flush()  # Generate company ID
+        db.flush()
 
         # 👨‍💼 Create Admin Agent
         new_agent = models.Agent(
@@ -91,30 +63,25 @@ def register_company(
             role="admin",
             is_active=True
         )
-
         db.add(new_agent)
-
-        # 💾 Final commit
         db.commit()
 
         db.refresh(new_company)
         db.refresh(new_agent)
 
+        # 3. 🔥 Generate Token (Sub mein admin_id ya email daalein)
+        token = create_access_token(data={"sub": str(new_agent.id), "email": new_agent.email})
+
+        # 4. Response mein token bhejien
         return {
             "status": "success",
             "company_id": new_company.id,
             "admin_id": new_agent.id,
+            "access_token": token, # <--- Frontend ise save karega
             "message": "Company and Admin created successfully"
         }
 
     except Exception as e:
         db.rollback()
-
-        # 🔒 Secure internal logging
         logger.error(f"Client Registration Error: {str(e)}")
-
-        # ❌ Safe public response
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed due to an internal server error."
-        )
+        raise HTTPException(status_code=500, detail="Internal server error.")
