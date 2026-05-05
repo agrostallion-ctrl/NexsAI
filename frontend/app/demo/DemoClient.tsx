@@ -1,7 +1,7 @@
 'use client'
 
 // ✅ Fix 1: No inline STYLES const — imported as static CSS file
-import '../../styles/demo.css'
+
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
