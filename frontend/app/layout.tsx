@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { DM_Sans, Syne } from "next/font/google";
 import "./globals.css";
+import '../styles/landing.css'
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -8,9 +9,21 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-syne",
+});
+
 export const metadata: Metadata = {
-  title: "NexusAI",
-  description: "NexusAI Chat",
+  metadataBase: new URL("https://nexusai.in"),
+  title: {
+    default: "NexusAI – WhatsApp AI Automation for Indian Businesses",
+    template: "%s | NexusAI",
+  },
+  description:
+    "AI-powered WhatsApp marketing automation. Bulk broadcasts, intelligent chatbots, integrated payments, and CRM sync — no coding required.",
 };
 
 export default function RootLayout({
@@ -19,8 +32,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={dmSans.className}>{children}</body>
+    <html lang="hi">
+      <body className={`${dmSans.className} ${syne.variable}`}>
+        {children}
+      </body>
     </html>
   );
 }

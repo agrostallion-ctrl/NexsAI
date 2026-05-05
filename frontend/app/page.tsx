@@ -1,190 +1,259 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import api from '@/lib/api'
+import { useState } from 'react'
+import Link from 'next/link'
 
-export default function HomePage() {
-  const router = useRouter()
-  const [status, setStatus] = useState('Initializing...')
-  const [progress, setProgress] = useState(0)
+import { useAuthRedirect } from '../hooks/useAuthRedirect'
 
-  useEffect(() => {
-    // ✅ D: Prefetch likely routes for instant navigation
-    router.prefetch('/chat')
-    router.prefetch('/onboarding')
-    router.prefetch('/login')
+import Hero from '../components/landing/Hero'
+import Stats from '../components/landing/Stats'
+import Features from '../components/landing/Features'
+import Steps from '../components/landing/Steps'
+import Testimonials from '../components/landing/Testimonials'
+import Pricing from '../components/landing/Pricing'
+import Faq from '../components/landing/Faq'
+import CTA from '../components/landing/CTA'
+import SignupModal from '../components/landing/SignupModal'
+import DemoModal from '../components/landing/DemoModal'
 
-    const initializeApp = async () => {
-      try {
-        // ── Step 1: Token existence check ──────────────
-        setStatus('Checking authentication...')
-        setProgress(25)
 
-        const token = localStorage.getItem('token')
-        if (!token) {
-          setStatus('Redirecting to login...')
-          setProgress(100)
-          router.replace('/login')
-          return
-        }
+// =========================
+// 🧭 NAVBAR
+// =========================
+function Navbar({
+  onSignupClick
+}: {
+  onSignupClick: () => void
+}) {
+  return (
+    <nav className="nx-nav">
+      <div className="nx-nav-container">
 
-        // ── Step 2: Verify token with backend ──────────
-        // ✅ B: Real token validation — no artificial delay
-        setStatus('Verifying session...')
-        setProgress(50)
+        {/* Logo */}
+        <Link href="/" className="nx-logo">
+          Nexus<span>AI</span>
+        </Link>
 
-        try {
-          await api.get('/auth/verify')
-        } catch (authErr: any) {
-          // ✅ B: Token expired या invalid — clear और redirect
-          const status = authErr?.response?.status
-          if (status === 401 || status === 403) {
-            localStorage.removeItem('token')
-            localStorage.removeItem('company_id')
-            localStorage.removeItem('whatsapp_connected')
-            setStatus('Session expired. Redirecting...')
-            setProgress(100)
-            router.replace('/login')
-            return
-          }
-          // Network error — token अभी भी valid मान लो
-          console.warn('Auth verify failed (network?), proceeding with local state')
-        }
+        {/* Nav Links */}
+        <ul className="nx-nav-links">
+          <li>
+            <a href="#features">
+              Features
+            </a>
+          </li>
 
-        // ── Step 3: Onboarding status ──────────────────
-        // ✅ A: Real onboarding status from backend
-        setStatus('Loading your workspace...')
-        setProgress(75)
+          <li>
+            <a href="#pricing">
+              Pricing
+            </a>
+          </li>
 
-        let whatsappConnected = localStorage.getItem('whatsapp_connected') === 'true'
-        let companyId = localStorage.getItem('company_id')
+          <li>
+            <a href="#faq">
+              FAQ
+            </a>
+          </li>
 
-        try {
-          const { data } = await api.get('/auth/status')
-          // Backend से fresh status लो
-          whatsappConnected = data.whatsapp_connected ?? whatsappConnected
-          companyId = data.company_id ? String(data.company_id) : companyId
+          <li>
+            <Link
+              href="/login"
+              className="nx-nav-plain"
+            >
+              Sign In
+            </Link>
+          </li>
 
-          // ✅ Local storage को sync करें
-          if (data.company_id) localStorage.setItem('company_id', String(data.company_id))
-          if (data.whatsapp_connected !== undefined)
-            localStorage.setItem('whatsapp_connected', String(data.whatsapp_connected))
-        } catch (statusErr) {
-          // Network error — local state से चलाते हैं
-          console.warn('Status check failed, using local state')
-        }
+          <li>
+            <button
+              onClick={onSignupClick}
+              className="nx-nav-cta"
+            >
+              Free Trial
+            </button>
+          </li>
+        </ul>
 
-        // ── Step 4: Route decision ─────────────────────
-        setStatus('Almost there...')
-        setProgress(90)
+      </div>
+    </nav>
+  )
+}
 
-        if (!companyId) {
-          localStorage.removeItem('token')
-          setProgress(100)
-          router.replace('/signup')
-          return
-        }
-
-        setProgress(100)
-
-        if (whatsappConnected) {
-          router.replace('/chat')
-        } else {
-          router.replace('/onboarding')
-        }
-
-      } catch (error) {
-        console.error('Home routing error:', error)
-        localStorage.removeItem('token')
-        localStorage.removeItem('company_id')
-        localStorage.removeItem('whatsapp_connected')
-        router.replace('/login')
-      }
+// =========================
+// 🦶 FOOTER
+// =========================
+function Footer() {
+  const footerSections = [
+    {
+      title: 'Product',
+      links: [
+        ['Features', '#features'],
+        ['Pricing', '#pricing'],
+        ['Integrations', '/onboarding'],
+        ['Demo', '/demo']
+      ]
+    },
+    {
+      title: 'Company',
+      links: [
+        ['About', '/about'],
+        ['Contact', '/contact'],
+        ['Support', '/support']
+      ]
+    },
+    {
+      title: 'Legal',
+      links: [
+        ['Privacy Policy', '/privacy'],
+        ['Terms of Service', '/terms']
+      ]
     }
-
-    initializeApp()
-  }, [router])
+  ]
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
-      style={{ background: '#0a0f0d', fontFamily: "'DM Sans', sans-serif" }}
-    >
-      {/* Ambient glows */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(0,168,132,0.1) 0%, transparent 70%)' }} />
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(37,211,102,0.05) 0%, transparent 70%)' }} />
-        <div className="absolute inset-0 opacity-[0.025]"
-          style={{ backgroundImage: 'linear-gradient(#00a884 1px, transparent 1px), linear-gradient(90deg, #00a884 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-      </div>
+    <footer className="nx-footer">
 
-      {/* Center content */}
-      <div className="relative z-10 flex flex-col items-center">
-
-        {/* Logo with pulse ring */}
-        <div className="relative mb-8">
-          <div className="absolute inset-0 rounded-2xl animate-ping opacity-20"
-            style={{ background: 'rgba(0,168,132,0.4)', animationDuration: '2s' }} />
-          <div
-            className="w-20 h-20 rounded-2xl flex items-center justify-center font-black text-white text-3xl relative"
-            style={{
-              background: 'linear-gradient(135deg, #00a884 0%, #25d366 100%)',
-              boxShadow: '0 0 60px rgba(0,168,132,0.35)'
-            }}
-          >
-            N
-          </div>
-        </div>
+      {/* Top */}
+      <div className="nx-footer-top">
 
         {/* Brand */}
-        <h1 className="text-4xl font-black text-white tracking-tight mb-1">NexusAI</h1>
-        <p className="text-sm font-medium mb-12" style={{ color: '#00a884' }}>for StallionAgro</p>
-
-        {/* Progress bar */}
-        <div className="w-64 mb-5">
-          <div className="w-full h-[2px] rounded-full overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.06)' }}>
-            <div
-              className="h-full rounded-full transition-all duration-500 ease-out"
-              style={{
-                width: `${progress}%`,
-                background: 'linear-gradient(90deg, #00a884, #25d366)',
-                boxShadow: '0 0 10px rgba(0,168,132,0.6)'
-              }}
-            />
+        <div className="nx-footer-brand">
+          <div className="nx-logo">
+            Nexus<span>AI</span>
           </div>
+
+          <p>
+            AI-powered WhatsApp commerce
+            platform for modern businesses.
+          </p>
         </div>
 
-        {/* Status */}
-        <p className="text-sm tracking-wide transition-all duration-300"
-          style={{ color: 'rgba(134,150,160,0.8)' }}>
-          {status}
-        </p>
+        {/* Footer Columns */}
+        {footerSections.map((section) => (
+          <div
+            key={section.title}
+            className="nx-footer-col"
+          >
+            <h4>{section.title}</h4>
 
-        {/* Animated dots */}
-        <div className="flex gap-1.5 mt-8">
-          {[0, 1, 2].map(i => (
-            <div key={i} className="w-1.5 h-1.5 rounded-full"
-              style={{
-                background: '#00a884',
-                animation: 'dotPulse 1.4s ease-in-out infinite',
-                animationDelay: `${i * 0.2}s`
-              }}
-            />
-          ))}
-        </div>
+            <ul>
+              {section.links.map(
+                ([label, href]) => (
+                  <li key={label}>
+                    <Link href={href}>
+                      {label}
+                    </Link>
+                  </li>
+                )
+              )}
+            </ul>
+          </div>
+        ))}
+
       </div>
 
-      {/* Bottom tagline */}
-      <p className="absolute bottom-8 text-xs tracking-widest uppercase"
-        style={{ color: 'rgba(134,150,160,0.25)' }}>
-        Real-time Agricultural Commerce
-      </p>
+      {/* Bottom */}
+      <div className="nx-footer-bottom">
+        <p>
+          © 2026 NexusAI · All rights
+          reserved.
+        </p>
 
-      {/* ✅ C: Font import layout.tsx में होना चाहिए — यहाँ नहीं */}
+        <p>
+          Built for scalable WhatsApp
+          automation.
+        </p>
+      </div>
+
+    </footer>
+  )
+}
+
+// =========================
+// 🚀 MAIN LANDING PAGE
+// =========================
+export default function LandingPage() {
+  // 🔐 Redirect authenticated users
+  useAuthRedirect()
+
+  // =========================
+  // 🪟 MODAL STATES
+  // =========================
+  const [signupOpen, setSignupOpen] =
+    useState(false)
+
+  const [demoOpen, setDemoOpen] =
+    useState(false)
+
+  return (
+    <div className="nx-root">
+
+      {/* NAVBAR */}
+      <Navbar
+        onSignupClick={() =>
+          setSignupOpen(true)
+        }
+      />
+
+      {/* MAIN */}
+      <main>
+
+        {/* HERO */}
+        <Hero
+          onSignupClick={() =>
+            setSignupOpen(true)
+          }
+          onDemoClick={() =>
+            setDemoOpen(true)
+          }
+        />
+
+        {/* STATS */}
+        <Stats />
+
+        {/* FEATURES */}
+        <Features />
+
+        {/* STEPS */}
+        <Steps />
+
+        {/* TESTIMONIALS */}
+        <Testimonials />
+
+        <Pricing />
+
+        {/* CTA */}
+        <CTA
+          onSignupClick={() =>
+            setSignupOpen(true)
+          }
+          onDemoClick={() =>
+            setDemoOpen(true)
+          }
+        />
+
+        {/* FAQ */}
+        <Faq />
+
+      </main>
+
+      {/* FOOTER */}
+      <Footer />
+
+      {/* MODALS */}
+      <SignupModal
+        open={signupOpen}
+        onClose={() =>
+          setSignupOpen(false)
+        }
+      />
+
+      <DemoModal
+        open={demoOpen}
+        onClose={() =>
+          setDemoOpen(false)
+        }
+      />
+
     </div>
   )
 }
