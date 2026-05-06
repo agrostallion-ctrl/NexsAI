@@ -26,12 +26,12 @@ export default function ContactPage() {
   const contactCards = [
     {
       icon: "✉️",
-      label: "Support Email",
+      label: "Email",
       value: "support@360nexusai.com",
       href: "mailto:support@360nexusai.com",
     },
     {
-      icon: "📱",
+      icon: "📞",
       label: "Phone / WhatsApp",
       value: "+91 78809 00423",
       href: "tel:+917880900423",
@@ -45,55 +45,54 @@ export default function ContactPage() {
 
   return (
     <main className="min-h-screen bg-[#020807] text-white">
-      <section className="relative overflow-hidden px-5 py-20 sm:px-8 lg:px-12">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,255,140,0.13),transparent_40%)]" />
-
-        <div className="relative mx-auto max-w-6xl">
+      <section className="px-5 py-20 sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-6xl">
           {/* Header */}
-          <div className="text-center">
-            <div className="mb-5 inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.35em] text-emerald-400">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mb-5 inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.28em] text-emerald-400">
               Contact Us
             </div>
 
-            <h1 className="mx-auto max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-7xl">
-              Let&apos;s Talk About{" "}
+            <h1 className="text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+              Get in Touch with{" "}
               <span className="text-emerald-400">360NexusAI</span>
             </h1>
 
-            <p className="mx-auto mt-6 max-w-3xl text-base leading-8 text-gray-400 sm:text-lg">
-              Have questions about our platform, pricing, demo, WhatsApp
-              automation, CRM workflows, or integrations? Send us a message and
-              our team will get back to you.
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-gray-400">
+              Have questions about pricing, demo, WhatsApp automation, CRM
+              workflows, or integrations? Send us a message and our team will
+              contact you soon.
             </p>
           </div>
 
-          <div className="mt-14 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-            {/* Contact Info */}
-            <div className="space-y-5">
+          {/* Content */}
+          <div className="mt-14 grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+            {/* Left cards */}
+            <div className="space-y-4">
               {contactCards.map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-3xl border border-white/10 bg-[#071410] p-6 shadow-xl transition hover:border-emerald-500/30"
+                  className="rounded-3xl border border-white/10 bg-[#071410] p-6 shadow-xl"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-xl">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-xl">
                       {card.icon}
                     </div>
 
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.25em] text-gray-500">
+                      <p className="text-xs font-bold uppercase tracking-[0.22em] text-gray-500">
                         {card.label}
                       </p>
 
                       {card.href ? (
                         <a
                           href={card.href}
-                          className="mt-2 block text-base font-semibold text-emerald-400 hover:text-emerald-300"
+                          className="mt-1 block text-base font-bold text-emerald-400 hover:text-emerald-300"
                         >
                           {card.value}
                         </a>
                       ) : (
-                        <p className="mt-2 text-base font-semibold text-white">
+                        <p className="mt-1 text-base font-bold text-white">
                           {card.value}
                         </p>
                       )}
@@ -103,26 +102,18 @@ export default function ContactPage() {
               ))}
 
               <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-6 shadow-xl">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-xl">
-                    🕐
-                  </div>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-400">
+                  Response Time
+                </p>
 
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-400">
-                      Response Time
-                    </p>
+                <h3 className="mt-2 text-2xl font-bold text-white">
+                  Usually within 24 hours
+                </h3>
 
-                    <p className="mt-2 text-base font-semibold text-white">
-                      Usually within 24 hours
-                    </p>
-
-                    <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-black/30 px-3 py-1 text-xs font-semibold text-emerald-400">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                      Online Support
-                    </div>
-                  </div>
-                </div>
+                <p className="mt-3 text-sm leading-7 text-gray-400">
+                  Our team reviews every inquiry and responds as quickly as
+                  possible.
+                </p>
               </div>
             </div>
 
@@ -133,13 +124,12 @@ export default function ContactPage() {
               </h2>
 
               <p className="mt-2 text-sm leading-7 text-gray-400">
-                Fill out the form below and we will contact you regarding your
-                query.
+                Fill out the form below and we will get back to you.
               </p>
 
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="mt-7 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-gray-500">
                     Full Name
                   </label>
                   <input
@@ -147,12 +137,12 @@ export default function ContactPage() {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="Your name"
-                    className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-500/60"
+                    className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-500/60"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-gray-500">
                     Phone / WhatsApp
                   </label>
                   <input
@@ -160,13 +150,13 @@ export default function ContactPage() {
                     value={form.phone}
                     onChange={handleChange}
                     placeholder="+91 98765 43210"
-                    className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-500/60"
+                    className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-500/60"
                   />
                 </div>
               </div>
 
               <div className="mt-4">
-                <label className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-gray-500">
                   Email Address
                 </label>
                 <input
@@ -175,19 +165,19 @@ export default function ContactPage() {
                   value={form.email}
                   onChange={handleChange}
                   placeholder="you@example.com"
-                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-500/60"
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-500/60"
                 />
               </div>
 
               <div className="mt-4">
-                <label className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-gray-500">
                   Query Type
                 </label>
                 <select
                   name="query"
                   value={form.query}
                   onChange={handleChange}
-                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-500/60"
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/60"
                 >
                   <option value="">Select an option</option>
                   <option>Free Trial</option>
@@ -200,7 +190,7 @@ export default function ContactPage() {
               </div>
 
               <div className="mt-4">
-                <label className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-gray-500">
                   Message
                 </label>
                 <textarea
@@ -208,7 +198,7 @@ export default function ContactPage() {
                   value={form.message}
                   onChange={handleChange}
                   placeholder="Write your message..."
-                  className="min-h-[130px] w-full resize-y rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-500/60"
+                  className="min-h-[130px] w-full resize-y rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-500/60"
                 />
               </div>
 
