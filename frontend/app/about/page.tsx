@@ -1,136 +1,189 @@
 export default function AboutPage() {
+  const stats = [
+    {
+      value: "500+",
+      label: "Businesses Supported",
+    },
+    {
+      value: "10K+",
+      label: "Messages Managed Daily",
+    },
+    {
+      value: "99.9%",
+      label: "Platform Uptime",
+    },
+  ];
+
+  const highlights = [
+    {
+      icon: "🎯",
+      title: "Our Mission",
+      text: "Our mission is to help businesses simplify customer communication, automate repetitive tasks, improve response speed, and build stronger customer relationships through intelligent automation.",
+    },
+    {
+      icon: "📦",
+      title: "What We Offer",
+      text: "360NexusAI provides WhatsApp automation, CRM tools, AI chatbots, lead management, multi-agent inbox, real-time analytics, and customer support workflows in one unified platform.",
+    },
+  ];
+
+  const reasons = [
+    {
+      number: "01",
+      title: "Built for Modern Businesses",
+      text: "Whether you are a startup, retailer, service provider, agency, distributor, or enterprise, 360NexusAI helps you manage customer conversations and business workflows from one dashboard.",
+    },
+    {
+      number: "02",
+      title: "Fast Setup",
+      text: "Connect your WhatsApp Business number, manage leads, assign conversations, and start automating customer support without complex technical setup.",
+    },
+    {
+      number: "03",
+      title: "Scalable Communication",
+      text: "From customer inquiries and follow-ups to order updates and support messages, our platform is designed to scale as your business grows.",
+    },
+  ];
+
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-[#f0ede6] px-6 py-16"
-      style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-        .syne { font-family: 'Syne', sans-serif; }
-      `}</style>
+    <main className="min-h-screen bg-[#020807] text-white">
+      <section className="relative overflow-hidden px-5 py-20 sm:px-8 lg:px-12">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,255,140,0.13),transparent_40%)]" />
 
-      <div className="max-w-4xl mx-auto">
-
-        {/* Eyebrow */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="w-6 h-px bg-[#3ddc84] inline-block" />
-          <span className="text-[11px] uppercase tracking-[0.2em] text-[#3ddc84] font-medium">
-            About us
-          </span>
-        </div>
-
-        {/* Heading */}
-        <h1 className="syne text-5xl font-extrabold leading-tight tracking-tight mb-6">
-          Agro businesses ke liye banaya{" "}
-          <span className="text-[#3ddc84]">360NexusAI</span>
-        </h1>
-
-        <p className="text-lg text-[#a09c94] leading-relaxed font-light max-w-2xl mb-14">
-          360NexusAI ek AI-powered SaaS platform hai jo agro businesses ko
-          WhatsApp automation, lead generation aur sales workflows ek jagah se
-          manage karne mein help karta hai.
-        </p>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-px bg-[#1e1e1e] rounded-2xl overflow-hidden mb-16">
-          {[
-            { num: "500+", label: "Agro businesses" },
-            { num: "10K+", label: "Messages / day" },
-            { num: "99.9%", label: "Platform uptime" },
-          ].map((s) => (
-            <div key={s.label} className="bg-[#111] px-6 py-7">
-              <div className="syne text-4xl font-extrabold text-[#3ddc84] leading-none mb-1">
-                {s.num}
-              </div>
-              <div className="text-[11px] uppercase tracking-widest text-[#666]">
-                {s.label}
-              </div>
+        <div className="relative mx-auto max-w-6xl">
+          {/* Hero */}
+          <div className="text-center">
+            <div className="mb-5 inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.35em] text-emerald-400">
+              About Us
             </div>
-          ))}
-        </div>
 
-        {/* Cards */}
-        <div className="grid md:grid-cols-2 gap-4 mb-12">
-          {[
-            {
-              icon: "🎯",
-              title: "Hamara Mission",
-              body: "Agro businesses ko cutting-edge AI tools dena jo communication simplify kare, conversions boost kare, aur customer relationships scale kare — bina kisi technical knowledge ke.",
-            },
-            {
-              icon: "📦",
-              title: "Kya Offer Karte Hain",
-              body: "WhatsApp automation, CRM integrations, AI chatbots aur real-time analytics — sab ek powerful dashboard mein. Farmers aur distributors dono ke liye optimized.",
-            },
-          ].map((c) => (
-            <div
-              key={c.title}
-              className="bg-[#111] border border-[#1e1e1e] rounded-2xl p-8 relative overflow-hidden hover:border-[#2a2a2a] transition-colors"
-            >
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#3ddc84] opacity-60" />
-              <div className="w-10 h-10 bg-[#0d2416] rounded-xl flex items-center justify-center text-xl mb-5">
-                {c.icon}
+            <h1 className="mx-auto max-w-5xl text-4xl font-black tracking-tight sm:text-5xl lg:text-7xl">
+              Building the Future of{" "}
+              <span className="text-emerald-400">Business Automation</span>
+            </h1>
+
+            <p className="mx-auto mt-6 max-w-4xl text-base leading-8 text-gray-400 sm:text-lg">
+              360NexusAI is an AI-powered SaaS platform designed to help
+              businesses automate customer engagement, WhatsApp communication,
+              lead management, customer support, and sales workflows from one
+              unified system.
+            </p>
+          </div>
+
+          {/* Stats */}
+          <div className="mt-14 grid gap-5 sm:grid-cols-3">
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 text-center shadow-xl"
+              >
+                <p className="text-4xl font-black text-emerald-400 sm:text-5xl">
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-xs uppercase tracking-[0.22em] text-gray-500">
+                  {stat.label}
+                </p>
               </div>
-              <h2 className="syne text-lg font-bold mb-3 text-[#f0ede6]">
-                {c.title}
+            ))}
+          </div>
+
+          {/* Mission / Offer */}
+          <div className="mt-14 grid gap-6 lg:grid-cols-2">
+            {highlights.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-3xl border border-white/10 bg-[#071410] p-7 shadow-xl transition hover:border-emerald-500/30"
+              >
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-2xl">
+                  {item.icon}
+                </div>
+
+                <h2 className="text-2xl font-bold text-white">{item.title}</h2>
+
+                <p className="mt-4 text-base leading-8 text-gray-400">
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Why Different */}
+          <div className="mt-16">
+            <div className="text-center">
+              <div className="mb-4 text-xs font-bold uppercase tracking-[0.35em] text-emerald-400">
+                Why 360NexusAI
+              </div>
+
+              <h2 className="text-3xl font-black tracking-tight sm:text-5xl">
+                Why Businesses Choose Us
               </h2>
-              <p className="text-sm text-[#888] leading-relaxed">{c.body}</p>
-            </div>
-          ))}
-        </div>
 
-        {/* Why us */}
-        <div className="mb-14">
-          <h2 className="syne text-2xl font-extrabold mb-6">Hum kyun alag hain</h2>
-          {[
-            {
-              num: "01",
-              title: "Agro-first approach",
-              body: "Generic SaaS nahi — platform specifically agri businesses ke liye design hua hai. Price broadcasts, mandi updates, seasonal campaigns — sab built-in.",
-            },
-            {
-              num: "02",
-              title: "5-minute onboarding",
-              body: "Koi coding nahi, koi technical setup nahi. WhatsApp number connect karo aur same din se messages automate karna shuru karo.",
-            },
-            {
-              num: "03",
-              title: "Dedicated support",
-              body: "24/7 support team jo agro business ki language samjhti hai — peak season mein bhi hamesha available.",
-            },
-          ].map((v, i, arr) => (
-            <div
-              key={v.num}
-              className={`flex gap-4 py-5 ${i < arr.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}
-            >
-              <span className="syne text-3xl font-extrabold text-[#1e3a28] min-w-[48px] leading-none pt-1">
-                {v.num}
-              </span>
-              <div>
-                <h3 className="text-sm font-medium mb-1 text-[#f0ede6]">{v.title}</h3>
-                <p className="text-xs text-[#666] leading-relaxed">{v.body}</p>
-              </div>
+              <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-gray-400">
+                We help businesses manage customer conversations, automate
+                routine communication, and improve response efficiency with a
+                simple, powerful, and scalable platform.
+              </p>
             </div>
-          ))}
-        </div>
 
-        {/* CTA */}
-        <div className="bg-gradient-to-br from-[#0d2416] to-[#111] border border-[#1e3a28] rounded-2xl p-12 text-center">
-          <h2 className="syne text-3xl font-extrabold mb-3">
-            Apna agro business grow karo
-          </h2>
-          <p className="text-[#888] text-sm mb-8">
-            500+ businesses already 360NexusAI use kar rahe hain. Aaj free trial shuru karo.
-          </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <button className="bg-[#3ddc84] text-[#0a0a0a] font-medium px-6 py-3 rounded-xl text-sm">
-              Start Free Trial — 14 Days Free
-            </button>
-            <button className="border border-[#333] text-[#f0ede6] px-6 py-3 rounded-xl text-sm">
-              Book a Demo →
-            </button>
+            <div className="mt-10 grid gap-5">
+              {reasons.map((item) => (
+                <div
+                  key={item.number}
+                  className="rounded-3xl border border-white/10 bg-[#071410] p-6 shadow-xl sm:p-8"
+                >
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    <div className="text-5xl font-black text-emerald-500/30">
+                      {item.number}
+                    </div>
+
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">
+                        {item.title}
+                      </h3>
+
+                      <p className="mt-3 text-base leading-8 text-gray-400">
+                        {item.text}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="mt-16 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-8 text-center shadow-2xl sm:p-12">
+            <div className="mb-4 text-xs font-bold uppercase tracking-[0.35em] text-emerald-400">
+              Get Started Today
+            </div>
+
+            <h2 className="mx-auto max-w-3xl text-3xl font-black tracking-tight sm:text-5xl">
+              Ready to automate your business communication?
+            </h2>
+
+            <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-gray-300">
+              Join businesses using 360NexusAI to manage leads, automate
+              customer conversations, and improve support operations.
+            </p>
+
+            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <a
+                href="/signup"
+                className="rounded-full bg-emerald-400 px-7 py-3 text-sm font-bold text-black transition hover:bg-emerald-300"
+              >
+                Start Free Trial →
+              </a>
+
+              <a
+                href="/contact"
+                className="rounded-full border border-white/10 bg-white/[0.04] px-7 py-3 text-sm font-bold text-white transition hover:border-emerald-500/40"
+              >
+                Contact Us →
+              </a>
+            </div>
           </div>
         </div>
-
-      </div>
+      </section>
     </main>
   );
 }

@@ -1,7 +1,7 @@
 export default function PrivacyPolicyPage() {
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white px-6 py-24">
-      <div className="max-w-3xl mx-auto">
+    <main className="min-h-screen bg-[#020807] text-white px-6 py-24">
+      <div className="max-w-5xl mx-auto">
 
         {/* Badge */}
         <div className="flex justify-center mb-6">
