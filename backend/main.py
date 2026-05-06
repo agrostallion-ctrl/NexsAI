@@ -19,6 +19,24 @@ with engine.connect() as conn:
         ADD COLUMN IF NOT EXISTS company_id INTEGER DEFAULT 1;
     """))
     conn.commit()
+
+with engine.connect() as conn:
+    conn.execute(text("""
+        ALTER TABLE agents
+        ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'agent';
+    """))
+
+    conn.execute(text("""
+        ALTER TABLE agents
+        ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+    """))
+
+    conn.execute(text("""
+        ALTER TABLE agents
+        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+    """))
+
+    conn.commit()
     
 app.add_middleware(
     CORSMiddleware,
