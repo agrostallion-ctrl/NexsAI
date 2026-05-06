@@ -57,4 +57,4 @@ app.include_router(whatsapp.router)
 
 @app.get("/")
 def home():
-    return {"message": "360360NexusAI is Live 🚀"}
+    return {"message": "360NexusAI is Live 🚀"}
