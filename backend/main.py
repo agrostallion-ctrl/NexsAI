@@ -23,7 +23,7 @@ app.include_router(webhook.router)
 app.include_router(messages.router)
 app.include_router(send.router)
 app.include_router(socket.router)
-app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+app.include_router(auth.router, prefix="/auth")
 app.include_router(client.router)
 app.include_router(whatsapp.router)
 

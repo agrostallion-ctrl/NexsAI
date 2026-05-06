@@ -82,7 +82,7 @@ export default function SignupModal({
       const {
         data
       } = await api.post(
-        '/auth/signup',
+        '/auth/register',
         {
           name: formData.name
             .trim(),

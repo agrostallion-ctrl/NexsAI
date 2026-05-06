@@ -7,7 +7,7 @@ import models
 from dependencies import get_db
 from utils.auth_utils import hash_password, verify_password, create_access_token, verify_token
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter(tags=["Auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 

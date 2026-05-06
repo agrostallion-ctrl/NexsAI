@@ -45,7 +45,7 @@ export default function SignupPage() {
     setFieldError(null)
 
     try {
-      const { data } = await api.post('/auth/signup', {
+      const { data } = await api.post('/auth/register', {
         company_name: form.company.trim(),
         name: form.name.trim(),
         email: form.email.trim(),
