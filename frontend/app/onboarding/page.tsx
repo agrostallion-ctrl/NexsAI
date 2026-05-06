@@ -169,7 +169,7 @@ export default function OnboardingPage() {
           <h1 className="text-4xl font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
             WhatsApp Onboarding
           </h1>
-          <p className="text-zinc-400">Connect your business to the NexusAI engine.</p>
+          <p className="text-zinc-400">Connect your business to the 360NexusAI engine.</p>
         </div>
 
         {error && (

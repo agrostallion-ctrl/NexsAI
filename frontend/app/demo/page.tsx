@@ -2,14 +2,14 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Live Demo — NexusAI',
+  title: 'Live Demo — 360NexusAI',
   description:
-    'Dekho NexusAI kaise kaam karta hai — AI chatbot, WhatsApp broadcasts, payments aur analytics ek 8-minute walkthrough mein.',
+    'Dekho 360NexusAI kaise kaam karta hai — AI chatbot, WhatsApp broadcasts, payments aur analytics ek 8-minute walkthrough mein.',
   openGraph: {
-    title: 'NexusAI Product Demo',
+    title: '360NexusAI Product Demo',
     description: 'WhatsApp commerce automation ka live walkthrough.',
-    url: 'https://nexusai.in/demo',
-    siteName: 'NexusAI',
+    url: 'https://360NexusAI.in/demo',
+    siteName: '360NexusAI',
     type: 'website',
   },
 }

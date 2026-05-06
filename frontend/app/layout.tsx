@@ -17,10 +17,10 @@ const syne = Syne({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://nexusai.in"),
+  metadataBase: new URL("https://360NexusAI.in"),
   title: {
-    default: "NexusAI – WhatsApp AI Automation for Indian Businesses",
-    template: "%s | NexusAI",
+    default: "360NexusAI – WhatsApp AI Automation for Indian Businesses",
+    template: "%s | 360NexusAI",
   },
   description:
     "AI-powered WhatsApp marketing automation. Bulk broadcasts, intelligent chatbots, integrated payments, and CRM sync — no coding required.",

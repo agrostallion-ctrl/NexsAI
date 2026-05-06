@@ -72,7 +72,7 @@ export default function LoginPage() {
 
           <h1 className="auth-headline">
             Welcome back to<br />
-            <em>NexusAI</em>
+            <em>360NexusAI</em>
           </h1>
 
           <p className="auth-desc">
@@ -114,7 +114,7 @@ export default function LoginPage() {
         <div className="auth-card">
 
           <div className="auth-card-head">
-            <h2>Sign in to NexusAI</h2>
+            <h2>Sign in to 360NexusAI</h2>
             <p>Don't have an account? <Link href="/signup">Create one free</Link></p>
           </div>
 

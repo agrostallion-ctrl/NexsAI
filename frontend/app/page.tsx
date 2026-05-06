@@ -154,7 +154,7 @@ function Footer() {
       {/* Bottom */}
       <div className="nx-footer-bottom">
         <p>
-          © 2026 NexusAI · All rights
+          © 2026 360NexusAI · All rights
           reserved.
         </p>
 

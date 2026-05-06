@@ -61,7 +61,7 @@ export default function Hero({
 
           {/* Subheadline */}
           <p className="nx-hero-sub">
-            NexusAI helps StallionAgro partners
+            360NexusAI helps StallionAgro partners
             broadcast price updates, automate
             farmer replies, and manage all
             conversations from one powerful
@@ -120,7 +120,7 @@ export default function Hero({
             {/* Header */}
             <div className="nx-mock-header">
               <span className="nx-mock-title">
-                NexusAI Live Chat
+                360NexusAI Live Chat
               </span>
 
               <span className="nx-live-dot">

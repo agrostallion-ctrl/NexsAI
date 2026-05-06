@@ -36,7 +36,7 @@ export default function CTA({
           {/* Subheadline */}
           <p className="nx-section-sub">
             Join 500+ businesses using
-            NexusAI. Automate WhatsApp,
+            360NexusAI. Automate WhatsApp,
             increase sales, and scale
             customer communication —
             all from one platform.

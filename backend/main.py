@@ -37,7 +37,7 @@ with engine.connect() as conn:
     """))
 
     conn.commit()
-    
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -57,4 +57,4 @@ app.include_router(whatsapp.router)
 
 @app.get("/")
 def home():
-    return {"message": "NexusAI is Live 🚀"}
+    return {"message": "360360NexusAI is Live 🚀"}

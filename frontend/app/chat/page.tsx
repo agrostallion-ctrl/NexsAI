@@ -358,7 +358,7 @@ export default function ChatPage() {
         <header className="p-4 flex justify-between items-center bg-[#202c33]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#25d366] to-[#128c7e] flex items-center justify-center font-bold text-white shadow-lg">N</div>
-            <h1 className="text-xl font-bold text-white">NexusAI</h1>
+            <h1 className="text-xl font-bold text-white">360NexusAI</h1>
           </div>
           {/* ✅ Connection dot */}
           <div className={`w-2.5 h-2.5 rounded-full transition-colors ${
@@ -526,9 +526,9 @@ export default function ChatPage() {
             <div className="w-32 h-32 bg-gradient-to-br from-[#25d366] to-[#128c7e] rounded-full flex items-center justify-center text-white text-6xl font-bold mb-6 shadow-2xl opacity-80">
               N
             </div>
-            <h2 className="text-3xl font-light text-[#e9edef]">NexusAI for StallionAgro</h2>
+            <h2 className="text-3xl font-light text-[#e9edef]">360NexusAI for StallionAgro</h2>
             <p className="mt-4 text-sm max-w-sm text-center opacity-60">
-              Connect with farmers and suppliers instantly. Real-time agricultural commerce powered by NexusAI.
+              Connect with farmers and suppliers instantly. Real-time agricultural commerce powered by 360NexusAI.
             </p>
           </div>
         )}

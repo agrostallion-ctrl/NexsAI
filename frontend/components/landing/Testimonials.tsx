@@ -19,7 +19,7 @@ export default function Testimonials() {
           </span>
 
           <h2 className="nx-h2">
-            Agro businesses love NexusAI
+            Agro businesses love 360NexusAI
           </h2>
 
           <p className="nx-section-sub">

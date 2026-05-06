@@ -45,7 +45,7 @@ body {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   NexusAI Landing Page Styles
+   360NexusAI Landing Page Styles
    Import in layout.tsx: import '../styles/landing.css'
    ✅ Fix 1: Moved out of useEffect injection
    ════════════════════════════════════════════════════════════════════════════ */
@@ -323,7 +323,7 @@ body {
 
 
 /* ════════════════════════════════════════════════════════════════════════════
-   NexusAI — Demo Page Styles
+   360NexusAI — Demo Page Styles
    Import in demo/page.tsx: import '../../styles/demo.css'
    Fonts: loaded via next/font/google in layout.tsx — NOT imported here
    ════════════════════════════════════════════════════════════════════════════ */

@@ -13,7 +13,7 @@ export const TESTIMONIALS: Testimonial[] = [
     initials: 'RP',
     color: '#2e7d32',
     quote:
-      'NexusAI has dramatically improved our customer response time. Orders are now processed significantly faster, and our overall team efficiency has reached new heights.',
+      '360NexusAI has dramatically improved our customer response time. Orders are now processed significantly faster, and our overall team efficiency has reached new heights.',
   },
   {
     name: 'Sunita Sharma',

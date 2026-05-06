@@ -86,7 +86,7 @@ function VideoPlayer() {
           <span className="demo-dot" style={{ background: '#f87171' }} />
           <span className="demo-dot" style={{ background: '#fbbf24' }} />
           <span className="demo-dot" style={{ background: '#4ade80' }} />
-          <span className="demo-url">app.nexusai.in/dashboard</span>
+          <span className="demo-url">app.360NexusAI.in/dashboard</span>
         </div>
 
         <div className="demo-video-body">
@@ -196,7 +196,7 @@ function BookingModal({ onClose }: { onClose: () => void }) {
               karegi. Jaldi mein ho?
             </p>
             <a
-              href={waHref('NexusAI demo abhi dekhna hai')}
+              href={waHref('360NexusAI demo abhi dekhna hai')}
               target="_blank"
               rel="noreferrer"
               className="demo-whatsapp-btn"
@@ -328,7 +328,7 @@ export default function DemoClient() {
             Live Product Demo
           </div>
           <h1 className="demo-h1">
-            Dekho NexusAI<br />
+            Dekho 360NexusAI<br />
             <em>kaise kaam karta hai</em>
           </h1>
           <p className="demo-sub">
@@ -340,7 +340,7 @@ export default function DemoClient() {
               📅 Live Demo Schedule Karo
             </button>
             <a
-              href={waHref('NexusAI ka demo dekhna hai')}
+              href={waHref('360NexusAI ka demo dekhna hai')}
               target="_blank"
               rel="noreferrer"
               className="demo-btn-whatsapp"
