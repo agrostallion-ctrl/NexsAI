@@ -9,6 +9,10 @@
 
 * {
   box-sizing: border-box;
+}
+
+html,
+body {
   padding: 0;
   margin: 0;
 }
@@ -16,7 +20,7 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Nunito', sans-serif, system-ui;
+  font-family: 'Nunito', system-ui, sans-serif;
   overflow-x: hidden;
 }
 
