@@ -4,12 +4,22 @@ from database import Base, engine
 import models
 # Saare valid routes ko ek hi line mein import karein
 from routes import webhook, messages, send, socket, auth, client, whatsapp
+from sqlalchemy import text
+
 
 app = FastAPI()
 
 # Database tables create karein (Startup par)
 models.Base.metadata.create_all(bind=engine)
 
+# AUTO ADD company_id COLUMN
+with engine.connect() as conn:
+    conn.execute(text("""
+        ALTER TABLE agents
+        ADD COLUMN IF NOT EXISTS company_id INTEGER DEFAULT 1;
+    """))
+    conn.commit()
+    
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
